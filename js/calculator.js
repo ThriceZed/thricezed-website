@@ -88,17 +88,14 @@ function updateDisplay() {
 
 function buildRequestMailto() {
   const lines = [
-    'REQUESTING CUSTOM PACKAGE',
-    '',
     `Home Games: ${state.homeGames}`,
     `Away Games: ${state.awayGames}`,
     `Extra Video Length: ${state.extraTime}`,
-    `Effects / CGI Scenes: ${state.cgi}`,
-    `Rush Delivery: ${state.rush}`,
+    `Effects/CGI Scenes: ${state.cgi}`,
+    `Rush Delivery: ${state.rush} Days`,
     '',
-    'DESCRIPTION OF REQUEST',
+    'Description of Request:',
     '',
-    'Type Here...',
   ].join('\n');
 
   const subject = encodeURIComponent('Custom Package Request');
