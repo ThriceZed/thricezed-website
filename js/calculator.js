@@ -88,7 +88,7 @@ function updateDisplay() {
 
 function buildRequestMailto() {
   const lines = [
-    '**Requesting Custom Package**',
+    'REQUESTING CUSTOM PACKAGE',
     '',
     `Home Games: ${state.homeGames}`,
     `Away Games: ${state.awayGames}`,
@@ -96,7 +96,7 @@ function buildRequestMailto() {
     `Effects / CGI Scenes: ${state.cgi}`,
     `Rush Delivery: ${state.rush}`,
     '',
-    '**Description of Request:**',
+    'DESCRIPTION OF REQUEST',
     '',
     'Type Here...',
   ].join('\n');
