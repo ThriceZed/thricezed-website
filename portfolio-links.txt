@@ -1,0 +1,3 @@
+# ThriceZed Portfolio Videos
+# Add one YouTube link per line below — line 1 fills slot 1, line 2 fills
+# slot 2, and so on. Leave a line blank to show "Coming Soon" for that slot.

@@ -422,10 +422,12 @@ section { padding: 6rem 0; }
 }
 
 .portfolio-item img,
-.portfolio-item video {
+.portfolio-item video,
+.portfolio-item iframe {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border: 0;
   transition: transform 0.5s ease;
 }
 
