@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services & Pricing — ThriceZed</title>
+<meta name="description" content="ThriceZed sports videography packages and a live custom quote calculator.">
+<link rel="icon" href="assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="logo"><img src="assets/img/logo.png" alt="ThriceZed"></a>
+  <nav class="site-nav">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="services.html" class="active">Services</a></li>
+      <li><a href="portfolio.html">Portfolio</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="hero-eyebrow" style="opacity:1;transform:none;">Services & Pricing</div>
+  <h2>Packages for every level of coverage.</h2>
+</section>
+
+<section class="container">
+  <div class="grid-3" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="pricing-card reveal">
+      <h3>Single Game</h3>
+      <div class="price">$60</div>
+      <ul>
+        <li>1 game covered</li>
+        <li>20–30s highlight video</li>
+        <li>Digital delivery</li>
+      </ul>
+      <a href="contact.html" class="btn">Book This</a>
+    </div>
+    <div class="pricing-card reveal">
+      <h3>Medium Bundle</h3>
+      <div class="price">$150</div>
+      <ul>
+        <li>2 games covered</li>
+        <li>45–60s highlight video</li>
+        <li>~$75 per game</li>
+      </ul>
+      <a href="contact.html" class="btn">Book This</a>
+    </div>
+    <div class="pricing-card reveal">
+      <h3>Large Bundle</h3>
+      <div class="price">$200</div>
+      <ul>
+        <li>3 games covered</li>
+        <li>90s–2min reel</li>
+        <li>~$67 per game</li>
+      </ul>
+      <a href="contact.html" class="btn">Book This</a>
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <div class="reveal" style="padding-top:3rem; margin-bottom:2rem;">
+    <div class="hero-eyebrow" style="opacity:1;transform:none;">Best Value</div>
+    <h2>Build your Custom package.</h2>
+    <p style="margin-top:1rem; max-width:600px;">Requires 5+ total games. The more you book, the more you save. Pricing scales automatically as you add games below.</p>
+  </div>
+
+  <div class="calculator reveal">
+    <div class="calc-row" data-stepper="homeGames">
+      <label>Home Games
+        <span class="hint">$60 each</span>
+      </label>
+      <div class="stepper">
+        <button class="step-down" aria-label="Decrease">−</button>
+        <span data-field="homeGames">3</span>
+        <button class="step-up" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="calc-row" data-stepper="awayGames">
+      <label>Away Games
+        <span class="hint">$65 each — travel premium</span>
+      </label>
+      <div class="stepper">
+        <button class="step-down" aria-label="Decrease">−</button>
+        <span data-field="awayGames">2</span>
+        <button class="step-up" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="calc-row" data-stepper="extraTime">
+      <label>Extra Video Length
+        <span class="hint">$8 per additional 30 seconds</span>
+      </label>
+      <div class="stepper">
+        <button class="step-down" aria-label="Decrease">−</button>
+        <span data-field="extraTime">0</span>
+        <button class="step-up" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="calc-row" data-stepper="cgi">
+      <label>Effects / CGI Scenes
+        <span class="hint">$10 per scene</span>
+      </label>
+      <div class="stepper">
+        <button class="step-down" aria-label="Decrease">−</button>
+        <span data-field="cgi">0</span>
+        <button class="step-up" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="calc-row" data-stepper="rush">
+      <label>Rush Delivery
+        <span class="hint">$5 per day faster (max 7 days)</span>
+      </label>
+      <div class="stepper">
+        <button class="step-down" aria-label="Decrease">−</button>
+        <span data-field="rush">0</span>
+        <button class="step-up" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="calc-total">
+      <div class="label">Estimated Total</div>
+      <div class="amount" id="calc-total-amount">$0</div>
+    </div>
+    <p class="calc-note" id="calc-discount-line" style="display:none;"></p>
+    <p class="calc-flag" id="calc-elite-flag"></p>
+    <div style="margin-top:2rem;">
+      <a href="#" id="request-custom-btn" class="btn btn-solid">Request This Package</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <img src="assets/img/logo.png" alt="ThriceZed">
+  <div class="social-links">
+    <a href="https://www.instagram.com/thricezed" target="_blank" rel="noopener">Instagram</a>
+  </div>
+  <p>&copy; 2026 ThriceZed. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/calculator.js"></script>
+</body>
+</html>
