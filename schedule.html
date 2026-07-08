@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contact — ThriceZed</title>
-<meta name="description" content="Get in touch with ThriceZed to book sports videography coverage.">
+<title>Schedule — ThriceZed</title>
+<meta name="description" content="Upcoming ThriceZed game coverage schedule.">
 <link rel="icon" href="assets/img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,36 +20,22 @@
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="services.html">Services</a></li>
-      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="schedule.html" class="active">Schedule</a></li>
       <li><a href="portfolio.html">Portfolio</a></li>
-      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="contact.html">Contact</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
   </nav>
 </header>
 
 <section class="page-header">
-  <div class="hero-eyebrow" style="opacity:1;transform:none;">Contact</div>
-  <h2>Let's get your game filmed.</h2>
+  <div class="hero-eyebrow" style="opacity:1;transform:none;">Schedule</div>
+  <h2>Upcoming coverage.</h2>
 </section>
 
 <section class="container">
-  <div class="contact-block reveal">
-    <div class="contact-line">
-      <span class="label">Email</span>
-      <a href="mailto:Nick@thricezed.com">Nick@thricezed.com</a>
-    </div>
-    <div class="contact-line">
-      <span class="label">Phone</span>
-      <a href="tel:+13163504148">(316) 350-4148</a>
-    </div>
-  </div>
-
-  <div class="reveal" style="margin-top:3rem;">
-    <div class="hero-eyebrow" style="opacity:1;transform:none;">Follow Along</div>
-    <div class="social-links">
-      <a href="https://www.instagram.com/thricezed" target="_blank" rel="noopener">Instagram</a>
-    </div>
+  <div id="schedule-container" class="reveal">
+    <p class="schedule-empty">Loading schedule...</p>
   </div>
 </section>
 
@@ -64,5 +50,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="js/main.js"></script>
+<script src="js/schedule.js"></script>
 </body>
 </html>

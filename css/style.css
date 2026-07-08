@@ -457,6 +457,52 @@ section { padding: 6rem 0; }
   padding: 1rem;
 }
 
+/* ---------- Schedule ---------- */
+.schedule-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.schedule-table th,
+.schedule-table td {
+  text-align: left;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-table th {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: var(--text-faint);
+  background: var(--bg-card);
+}
+
+.schedule-table td {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.schedule-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.schedule-table tbody tr:hover td {
+  color: var(--text);
+}
+
+.schedule-empty {
+  color: var(--text-faint);
+  padding: 2rem 0;
+}
+
 /* ---------- Contact ---------- */
 .contact-block {
   display: flex;
