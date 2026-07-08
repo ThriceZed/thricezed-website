@@ -1,5 +1,8 @@
-// Reads schedule.csv (plain CSV, editable on GitHub) and renders it as a table.
-// Lines starting with # are comments. The first non-comment line is the header.
+// Reads the schedule from a public Google Sheet (exported as CSV) and renders it as a table.
+// Edit the sheet directly at https://docs.google.com/spreadsheets/d/1XSSSw6Xz2cQz4dmMo7OnhsBDUKHt4IPsUHC3xUzkCWM/edit
+// The sheet must stay shared as "Anyone with the link can view" for this to keep working.
+
+const SCHEDULE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XSSSw6Xz2cQz4dmMo7OnhsBDUKHt4IPsUHC3xUzkCWM/export?format=csv&gid=0';
 
 function parseCSVLine(line) {
   const cells = [];
@@ -67,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('schedule-container');
   if (!container) return;
 
-  fetch('schedule.csv')
+  fetch(SCHEDULE_SHEET_URL)
     .then((res) => (res.ok ? res.text() : Promise.reject(new Error('not found'))))
     .then((text) => {
       const { header, rows } = parseCSV(text);
