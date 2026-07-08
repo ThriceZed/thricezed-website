@@ -49,6 +49,27 @@ function parseCSV(text) {
   return { header, rows };
 }
 
+function parseRowDate(cellText) {
+  const match = cellText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return null;
+  const [, month, day, year] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function removePastEvents(header, rows) {
+  const dateColIndex = header.findIndex((h) => h.trim().toLowerCase() === 'date');
+  if (dateColIndex === -1) return rows;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return rows.filter((row) => {
+    const eventDate = parseRowDate(row[dateColIndex] || '');
+    if (!eventDate) return true; // keep rows we can't confidently parse
+    return eventDate >= today;
+  });
+}
+
 function renderSchedule(header, rows) {
   const container = document.getElementById('schedule-container');
   if (!container) return;
@@ -74,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then((res) => (res.ok ? res.text() : Promise.reject(new Error('not found'))))
     .then((text) => {
       const { header, rows } = parseCSV(text);
-      renderSchedule(header, rows);
+      renderSchedule(header, removePastEvents(header, rows));
     })
     .catch(() => {
       container.innerHTML = '<p class="schedule-empty">No upcoming events on the schedule yet — check back soon.</p>';
