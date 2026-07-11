@@ -63,7 +63,7 @@ section { padding: 6rem 0; }
   border-bottom: 1px solid var(--border);
 }
 
-.logo img { height: 36px; width: auto; }
+.logo img { height: 52px; width: auto; }
 
 .nav-links {
   display: flex;
