@@ -60,7 +60,9 @@ if (window.gsap) {
 }
 
 // Hero logo animation: force playback explicitly rather than relying solely on
-// the autoplay attribute, and fall back to click-to-play if the browser still blocks it
+// the autoplay attribute. Safari in particular can silently refuse to autoplay
+// even muted+playsinline video, so fall back to starting it on the very first
+// interaction anywhere on the page, not just a click on the video itself.
 const heroVideo = document.querySelector('.hero-visual video');
 if (heroVideo) {
   heroVideo.muted = true;
@@ -69,5 +71,11 @@ if (heroVideo) {
   const tryPlay = () => heroVideo.play().catch(() => {});
   tryPlay();
 
-  document.querySelector('.hero-visual').addEventListener('click', tryPlay);
+  // Harmless if autoplay already succeeded — play() on a playing video is a no-op
+  const unlockEvents = ['click', 'touchstart', 'scroll', 'keydown'];
+  const unlock = () => {
+    tryPlay();
+    unlockEvents.forEach((evt) => document.removeEventListener(evt, unlock));
+  };
+  unlockEvents.forEach((evt) => document.addEventListener(evt, unlock, { passive: true }));
 }

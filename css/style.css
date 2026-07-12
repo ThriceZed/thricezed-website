@@ -255,6 +255,7 @@ section { padding: 6rem 0; }
     display: block;
     flex: 0 0 auto;
     width: min(38vw, 460px);
+    margin-left: 2.5rem;
   }
 
   .hero-visual video {
