@@ -232,6 +232,38 @@ section { padding: 6rem 0; }
   transform: translateY(20px);
 }
 
+.hero-visual {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .hero {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+  }
+
+  .hero-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hero-visual {
+    display: block;
+    flex: 0 0 auto;
+    width: min(38vw, 460px);
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  .hero-visual video {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
 /* ---------- Page header (non-home pages) ---------- */
 .page-header {
   padding: 10rem 24px 3rem;

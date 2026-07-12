@@ -50,9 +50,17 @@ if (window.gsap) {
     stagger: 0.15,
     ease: 'power3.out',
   });
+
+  gsap.to('.hero-visual', {
+    opacity: 1,
+    scale: 1,
+    duration: 1.1,
+    delay: 0.5,
+    ease: 'power3.out',
+  });
 } else {
   // GSAP failed to load (e.g. offline) — reveal everything instantly instead of staying hidden
-  document.querySelectorAll('.reveal, .hero-eyebrow, .hero p.sub, .hero-actions, .hero h1 .line')
+  document.querySelectorAll('.reveal, .hero-eyebrow, .hero p.sub, .hero-actions, .hero h1 .line, .hero-visual')
     .forEach((el) => {
       el.style.opacity = 1;
       el.style.transform = 'none';
