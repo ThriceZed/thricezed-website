@@ -50,19 +50,24 @@ if (window.gsap) {
     stagger: 0.15,
     ease: 'power3.out',
   });
-
-  gsap.to('.hero-visual', {
-    opacity: 1,
-    scale: 1,
-    duration: 1.1,
-    delay: 0.5,
-    ease: 'power3.out',
-  });
 } else {
   // GSAP failed to load (e.g. offline) — reveal everything instantly instead of staying hidden
-  document.querySelectorAll('.reveal, .hero-eyebrow, .hero p.sub, .hero-actions, .hero h1 .line, .hero-visual')
+  document.querySelectorAll('.reveal, .hero-eyebrow, .hero p.sub, .hero-actions, .hero h1 .line')
     .forEach((el) => {
       el.style.opacity = 1;
       el.style.transform = 'none';
     });
+}
+
+// Hero logo animation: force playback explicitly rather than relying solely on
+// the autoplay attribute, and fall back to click-to-play if the browser still blocks it
+const heroVideo = document.querySelector('.hero-visual video');
+if (heroVideo) {
+  heroVideo.muted = true;
+  heroVideo.playsInline = true;
+
+  const tryPlay = () => heroVideo.play().catch(() => {});
+  tryPlay();
+
+  document.querySelector('.hero-visual').addEventListener('click', tryPlay);
 }
