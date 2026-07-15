@@ -541,6 +541,9 @@ section { padding: 6rem 0; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   padding: 3rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .software-card + .software-card {
