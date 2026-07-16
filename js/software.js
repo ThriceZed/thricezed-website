@@ -1,5 +1,7 @@
 // Custom play/pause-only control for the software showcase video
 
+const TTSP_THUMBNAIL_TIME = 13.23;
+
 document.addEventListener('DOMContentLoaded', () => {
   const video = document.getElementById('ttsp-video');
   const toggle = document.getElementById('ttsp-video-toggle');
@@ -32,6 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   video.addEventListener('pause', showPlayIcon);
   video.addEventListener('ended', () => {
     showPlayIcon();
-    video.currentTime = 0;
+    video.currentTime = TTSP_THUMBNAIL_TIME;
   });
 });
