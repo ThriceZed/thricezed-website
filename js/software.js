@@ -30,5 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   video.addEventListener('play', showPauseIcon);
   video.addEventListener('pause', showPlayIcon);
-  video.addEventListener('ended', showPlayIcon);
+  video.addEventListener('ended', () => {
+    showPlayIcon();
+    video.currentTime = 0;
+  });
 });
