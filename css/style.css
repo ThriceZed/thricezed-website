@@ -560,7 +560,7 @@ section { padding: 6rem 0; }
 }
 
 .software-card .portfolio-item {
-  max-width: 640px;
+  max-width: 440px;
   aspect-ratio: 1 / 1;
   margin: 0 auto 3rem;
 }
@@ -571,6 +571,13 @@ section { padding: 6rem 0; }
   justify-content: center;
   flex-wrap: wrap;
   gap: 1rem;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.software-download .btn {
+  flex: 1 1 0;
+  text-align: center;
 }
 
 .software-download-note {
@@ -591,11 +598,6 @@ section { padding: 6rem 0; }
 
   .software-download {
     width: 100%;
-  }
-
-  .software-download .btn {
-    flex: 1 1 auto;
-    text-align: center;
   }
 }
 
