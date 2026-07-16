@@ -599,6 +599,7 @@ section { padding: 6rem 0; }
 .software-download {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -607,6 +608,21 @@ section { padding: 6rem 0; }
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .software-card {
+    padding: 1.75rem;
+  }
+
+  .software-download {
+    width: 100%;
+  }
+
+  .software-download .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
 }
 
 /* ---------- Contact ---------- */
