@@ -1,0 +1,205 @@
+<meta charset="utf-8">
+<title>TTSP User Manual</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --panel: #f7f7f6;
+  --line: #e2e2df;
+  --line-strong: #c9c9c5;
+  --ink: #1d1e20;
+  --muted: #55575c;
+  --faint: #8a8c92;
+  --accent: #1a7f56;
+  --mono: "SF Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131417; --panel: #1b1c20; --line: #2b2c31; --line-strong: #3d3e44;
+    --ink: #e8e9ea; --muted: #a2a4aa; --faint: #6f7178; --accent: #4cc38a;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --panel: #f7f7f6; --line: #e2e2df; --line-strong: #c9c9c5;
+  --ink: #1d1e20; --muted: #55575c; --faint: #8a8c92; --accent: #1a7f56;
+}
+:root[data-theme="dark"] {
+  --bg: #131417; --panel: #1b1c20; --line: #2b2c31; --line-strong: #3d3e44;
+  --ink: #e8e9ea; --muted: #a2a4aa; --faint: #6f7178; --accent: #4cc38a;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); line-height: 1.65; margin: 0; font-size: 15.5px; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 52px 24px 96px; }
+.docmeta { font-family: var(--mono); font-size: 12px; color: var(--faint); letter-spacing: 0.04em; }
+h1 { font-size: 32px; font-weight: 650; line-height: 1.15; margin: 8px 0 4px; letter-spacing: -0.01em; text-wrap: balance; }
+.subtitle { color: var(--muted); margin: 0 0 28px; max-width: 62ch; }
+h2 { font-size: 21px; font-weight: 650; margin: 56px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); letter-spacing: -0.01em; }
+h2 .num, h3 .num { color: var(--faint); font-weight: 500; margin-right: 10px; font-variant-numeric: tabular-nums; }
+h3 { font-size: 16.5px; font-weight: 650; margin: 30px 0 8px; }
+p { margin: 0 0 13px; }
+p, li, td { color: var(--muted); }
+b, strong { color: var(--ink); font-weight: 600; }
+.toc { border: 1px solid var(--line); background: var(--panel); padding: 18px 22px; margin: 28px 0 0; }
+.toc-title { font-size: 13px; font-weight: 650; color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; }
+.toc ol { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 32px; }
+.toc li { padding: 3px 0; font-size: 14.5px; break-inside: avoid; }
+.toc a { color: var(--muted); text-decoration: none; }
+.toc a:hover, .toc a:focus-visible { color: var(--accent); outline: none; }
+.toc .n { font-family: var(--mono); font-size: 12px; color: var(--faint); margin-right: 8px; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0 18px; }
+th { text-align: left; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line-strong); }
+td { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { color: var(--ink); font-weight: 550; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+ol.steps { margin: 10px 0 16px; padding-left: 22px; }
+ol.steps li { padding: 4px 0; }
+ul { margin: 8px 0 16px; padding-left: 22px; }
+ul li { padding: 3px 0; }
+kbd { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--line-strong); border-bottom-width: 2px; padding: 1px 7px; border-radius: 4px; color: var(--ink); }
+code { font-family: var(--mono); font-size: 13px; background: var(--panel); border: 1px solid var(--line); padding: 1px 6px; border-radius: 3px; color: var(--ink); }
+.note { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--panel); padding: 12px 16px; margin: 16px 0; font-size: 14.5px; border-radius: 0 4px 4px 0; }
+.note .label { display: block; font-size: 11.5px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+.foot { margin-top: 72px; border-top: 1px solid var(--line); padding-top: 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px; color: var(--faint); }
+.foot a { color: var(--accent); text-decoration: none; }
+@media (max-width: 600px) { .toc ol { columns: 1; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="docmeta">TTSP-UM-04 · Revision 0.4 · July 2026</p>
+  <h1>ThriceZed Tracking Studio Pro<br>User Manual</h1>
+  <p class="subtitle">TTSP is a Blender extension that reconstructs a camera move from video. It produces a keyframed camera that matches the original shot, together with a colored point cloud of the filmed environment, for use in matchmoving and CG integration.</p>
+  <nav class="toc" aria-label="Contents">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><span class="n">1</span><a href="#s1">Overview</a></li>
+      <li><span class="n">2</span><a href="#s2">Requirements and installation</a></li>
+      <li><span class="n">3</span><a href="#s3">Quick start</a></li>
+      <li><span class="n">4</span><a href="#s4">Interface reference</a></li>
+      <li><span class="n">5</span><a href="#s5">The imported scene</a></li>
+      <li><span class="n">6</span><a href="#s6">Troubleshooting</a></li>
+      <li><span class="n">7</span><a href="#s7">Shooting guidelines</a></li>
+    </ol>
+  </nav>
+</header>
+
+<section id="s1">
+  <h2><span class="num">1</span>Overview</h2>
+  <p>TTSP implements a structure-from-motion pipeline. Each solve passes through the same sequence:</p>
+  <ol class="steps">
+    <li><b>Frame extraction.</b> The video is sampled into still frames at a configurable interval and resolution.</li>
+    <li><b>Feature detection.</b> Each frame is scanned for thousands of distinctive, trackable points of detail.</li>
+    <li><b>Feature matching.</b> The same points are identified across neighboring frames.</li>
+    <li><b>Camera solving.</b> From those correspondences, the solver computes the one camera path and 3D point set that explain all observations.</li>
+    <li><b>Scene construction.</b> The result is imported into Blender as an animated camera, a point cloud, and the source footage as a camera background.</li>
+  </ol>
+  <p>All processing runs locally. Solving runs in a separate background process, so Blender remains fully responsive throughout, and a running solve can be cancelled at any time.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="num">2</span>Requirements and installation</h2>
+  <ul>
+    <li>Blender 4.2 or later, on macOS (Apple Silicon) or Windows (x64).</li>
+    <li>No external software. The solver and frame extractor are bundled inside the extension.</li>
+    <li>Optional: a separate CUDA-enabled COLMAP installation can accelerate solving on NVIDIA GPUs (see §4.4).</li>
+  </ul>
+  <p>To install: <b>Edit ▸ Preferences ▸ Get Extensions ▸ Install from Disk…</b>, select the <code>ttsp-*.zip</code> for your platform, and confirm the extension is enabled in the Add-ons list. The panel appears in the 3D viewport sidebar (<kbd>N</kbd>) under the <b>TTSP</b> tab.</p>
+  <p>Each solved video receives a sidecar folder named <code>&lt;video&gt;_TTSP</code> next to the source file. It holds the extracted frames, the solve database, the reconstruction, and logs. Results are cached: re-importing a finished solve is immediate.</p>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3</span>Quick start</h2>
+  <ol class="steps">
+    <li>In the 3D viewport, press <kbd>N</kbd> and select the <b>TTSP</b> tab.</li>
+    <li>In <b>Footage</b>, select a video file. Its properties and an estimated tracking time appear below the field.</li>
+    <li>In <b>Solve</b>, click <b>Track and solve</b>. Progress is reported per stage; Blender remains usable.</li>
+    <li>When the panel reports the solve is complete, click <b>Build scene</b> in <b>Scene import</b>.</li>
+    <li>Press <kbd>Numpad 0</kbd> to look through the reconstructed camera and <kbd>Space</kbd> to play back the move.</li>
+  </ol>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4</span>Interface reference</h2>
+
+  <h3><span class="num">4.1</span>Footage</h3>
+  <p>Selects the input video and controls how it is sampled for analysis. When a video is chosen, an information readout shows resolution, frame rate, duration, file size, total frame count, the number of frames that will be analyzed, and an estimated tracking time. The last two update live as the settings change.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Setting</th><th>Default</th><th>Description</th></tr>
+    <tr><td>Analyze every _ frames</td><td>2</td><td>Frequency of feature detection. A value of 2 analyzes every second frame. Use 1 for fast camera moves so consecutive frames still overlap; raise the value for long, slow shots.</td></tr>
+    <tr><td>Max frames analyzed</td><td>300</td><td>Maximum number of keyframes. For long videos, the detection frequency is lowered automatically to stay within this limit and keep solve times short.</td></tr>
+    <tr><td>Analysis resolution (px)</td><td>1600</td><td>Downscale size; the value is the long edge of the downscaled video used for analysis. Raise it only if tracking struggles on fine or distant detail.</td></tr>
+  </table></div>
+
+  <h3><span class="num">4.2</span>Solve</h3>
+  <p>The <b>Engine</b> line reports which solver will run: the bundled solver (CPU) or a system COLMAP installation with GPU acceleration, if enabled in §4.5.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Control</th><th>Description</th></tr>
+    <tr><td>Quality</td><td><b>Fast (global)</b> solves all frames simultaneously and is the recommended default. <b>Robust (incremental)</b> registers frames one at a time; slower, but more tolerant of difficult footage (motion blur, sparse detail, abrupt moves).</td></tr>
+    <tr><td>Track and solve</td><td>Starts the solve in a background process. The progress bar reports each stage; <b>Cancel</b> stops the run immediately.</td></tr>
+  </table></div>
+  <p>Progress stages, in order:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Stage</th><th>Meaning</th></tr>
+    <tr><td>Extracting Frames</td><td>Sampled stills are pulled from the video.</td></tr>
+    <tr><td>Finding Features</td><td>Each frame is scanned for trackable detail.</td></tr>
+    <tr><td>Matching Features</td><td>Detail is matched across neighboring frames.</td></tr>
+    <tr><td>Solving Camera</td><td>Rotations, then positions, then refinement.</td></tr>
+    <tr><td>Saving Solve</td><td>The reconstruction is written to the sidecar folder.</td></tr>
+  </table></div>
+
+  <h3><span class="num">4.3</span>Scene import</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Option</th><th>Description</th></tr>
+    <tr><td>Keyframed camera</td><td>Creates a camera keyed on every solved frame, with focal length estimated from the solve.</td></tr>
+    <tr><td>Point cloud</td><td>Imports the reconstructed 3D points as a cloud of small dots — a sketch of the filmed environment for placing CG against.</td></tr>
+    <tr><td>Video as camera background</td><td>Displays the source footage behind the camera view and sets the render resolution to match the clip.</td></tr>
+    <tr><td>Build scene</td><td>Imports the selected items into a new collection. A best-effort leveling is applied automatically on import.</td></tr>
+    <tr><td>Align Floor to Selected Points</td><td>Levels the scene from points you choose. Select the point cloud, enter Edit Mode (<kbd>Tab</kbd>), select three or more points on the ground (box-select works well), and click the button. The whole solve rotates so those points become the level floor at Z&nbsp;=&nbsp;0, with their center at the origin.</td></tr>
+    <tr><td>Open solve folder</td><td>Reveals the <code>&lt;video&gt;_TTSP</code> sidecar folder.</td></tr>
+  </table></div>
+
+  <h3><span class="num">4.4</span>System</h3>
+  <p>Reports the state of TTSP's components. <b>Solver</b> and <b>Frame extractor</b> should both read <i>Bundled</i>. <b>System COLMAP (turbo)</b> indicates whether a separate COLMAP installation was detected; enabling <b>Use system COLMAP</b> routes solving through it, which is substantially faster on NVIDIA GPUs. <b>Re-scan</b> re-checks after installing software. A manual path to a COLMAP executable can be set in the add-on preferences.</p>
+</section>
+
+<section id="s5">
+  <h2><span class="num">5</span>The imported scene</h2>
+  <p><b>Build scene</b> creates a collection named <code>TTSP &lt;clip&gt;</code> containing an empty, with the camera and point cloud parented to it. The empty is the master transform for the whole solve: rotating or scaling it moves camera and points together, keeping them registered to each other.</p>
+  <p>An automatic best-effort leveling is applied on import. If the result is not level — footage varies — use <b>Align Floor to Selected Points</b> (§4.3) to set the ground plane exactly from points you pick. Two properties still require judgment:</p>
+  <ul>
+    <li><b>Scale.</b> Monocular solves have no absolute scale. To calibrate: find two points in the cloud whose real-world separation is known, measure the distance in Blender, and scale the empty by <i>real ÷ measured</i>.</li>
+    <li><b>Heading.</b> Which compass direction the scene faces is arbitrary; rotate the empty around Z if a particular alignment is needed.</li>
+  </ul>
+  <p>CG elements placed among the points will hold their position in the shot when viewed through the camera. Parent them to the empty if you expect to re-orient or re-scale the world afterward.</p>
+</section>
+
+<section id="s6">
+  <h2><span class="num">6</span>Troubleshooting</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Symptom</th><th>Cause and remedy</th></tr>
+    <tr><td>"No reconstruction produced"</td><td>The footage lacks parallax (camera rotated without traveling) or trackable texture. Reshoot with lateral movement, or try Robust quality.</td></tr>
+    <tr><td>Erratic camera path</td><td>Motion blur or insufficient frame overlap. Set "Analyze Every _ Frames" to 1, raise "Max Frames Analyzed", and try Robust quality.</td></tr>
+    <tr><td>"Solve data missing on disk"</td><td>The solve predates the current TTSP version. Run Track and solve again for that video.</td></tr>
+    <tr><td>Only part of the clip solved</td><td>Expected on difficult footage; the camera is keyed only where solving succeeded. More texture and slower moves raise the solved fraction.</td></tr>
+    <tr><td>Panel missing after update</td><td>Confirm the extension is enabled: Edit ▸ Preferences ▸ Get Extensions ▸ Installed.</td></tr>
+    <tr><td>Other failures</td><td>The complete engine log is written to <code>worker.log</code> in the sidecar folder.</td></tr>
+  </table></div>
+</section>
+
+<section id="s7">
+  <h2><span class="num">7</span>Shooting guidelines</h2>
+  <ul>
+    <li><b>Translate the camera.</b> Parallax is the raw material of reconstruction. Walk, arc, or slide; a pan from a fixed position contains no depth information.</li>
+    <li><b>Favor textured surfaces.</b> Floors, brick, grass, crowds, and court markings track well. Blank walls, glass, water, and open sky do not.</li>
+    <li><b>Minimize motion blur.</b> A faster shutter, steadier support, or slower movement all preserve the detail the tracker depends on.</li>
+    <li><b>Lock exposure where possible.</b> Auto-exposure changes make identical detail look different between frames and weaken matching.</li>
+  </ul>
+</section>
+
+<footer class="foot">
+  <span>ThriceZed Tracking Studio Pro · User Manual · Rev 0.4</span>
+  <a href="https://thricezed.com">thricezed.com</a>
+</footer>
+
+</div>
