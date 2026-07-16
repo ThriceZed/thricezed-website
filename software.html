@@ -40,9 +40,13 @@
     <p>A camera tracking blender add-on that provides professional tracking tools into your workflow. It gets you a clean track quickly and reliably.</p>
 
     <div class="portfolio-item">
-      <video controls preload="metadata">
+      <video preload="metadata" playsinline id="ttsp-video">
         <source src="videos/ttsp-reveal.mp4" type="video/mp4">
       </video>
+      <button class="software-video-toggle" id="ttsp-video-toggle" aria-label="Play video">
+        <svg viewBox="0 0 24 24" class="icon-play"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" class="icon-pause" style="display:none;"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
     </div>
 
     <div class="software-download">
@@ -64,5 +68,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="js/main.js"></script>
+<script src="js/software.js"></script>
 </body>
 </html>
