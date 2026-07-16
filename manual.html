@@ -61,10 +61,14 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
 .note .label { display: block; font-size: 11.5px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
 .foot { margin-top: 72px; border-top: 1px solid var(--line); padding-top: 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px; color: var(--faint); }
 .foot a { color: var(--accent); text-decoration: none; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; color: var(--muted); text-decoration: none; margin-bottom: 20px; }
+.back-link:hover, .back-link:focus-visible { color: var(--accent); outline: none; }
 @media (max-width: 600px) { .toc ol { columns: 1; } }
 </style>
 
 <div class="wrap">
+
+<a class="back-link" href="software.html">&larr; Back to Software</a>
 
 <header>
   <p class="docmeta">TTSP-UM-04 · Revision 0.4 · July 2026</p>
@@ -152,7 +156,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   <div class="tablewrap"><table>
     <tr><th>Option</th><th>Description</th></tr>
     <tr><td>Keyframed camera</td><td>Creates a camera keyed on every solved frame, with focal length estimated from the solve.</td></tr>
-    <tr><td>Point cloud</td><td>Imports the reconstructed 3D points as a cloud of small dots — a sketch of the filmed environment for placing CG against.</td></tr>
+    <tr><td>Point cloud</td><td>Imports the reconstructed 3D points as a cloud of small dots, a sketch of the filmed environment for placing CG against.</td></tr>
     <tr><td>Video as camera background</td><td>Displays the source footage behind the camera view and sets the render resolution to match the clip.</td></tr>
     <tr><td>Build scene</td><td>Imports the selected items into a new collection. A best-effort leveling is applied automatically on import.</td></tr>
     <tr><td>Align Floor to Selected Points</td><td>Levels the scene from points you choose. Select the point cloud, enter Edit Mode (<kbd>Tab</kbd>), select three or more points on the ground (box-select works well), and click the button. The whole solve rotates so those points become the level floor at Z&nbsp;=&nbsp;0, with their center at the origin.</td></tr>
@@ -166,7 +170,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
 <section id="s5">
   <h2><span class="num">5</span>The imported scene</h2>
   <p><b>Build scene</b> creates a collection named <code>TTSP &lt;clip&gt;</code> containing an empty, with the camera and point cloud parented to it. The empty is the master transform for the whole solve: rotating or scaling it moves camera and points together, keeping them registered to each other.</p>
-  <p>An automatic best-effort leveling is applied on import. If the result is not level — footage varies — use <b>Align Floor to Selected Points</b> (§4.3) to set the ground plane exactly from points you pick. Two properties still require judgment:</p>
+  <p>An automatic best-effort leveling is applied on import. If the result is not level (footage varies), use <b>Align Floor to Selected Points</b> (§4.3) to set the ground plane exactly from points you pick. Two properties still require judgment:</p>
   <ul>
     <li><b>Scale.</b> Monocular solves have no absolute scale. To calibrate: find two points in the cloud whose real-world separation is known, measure the distance in Blender, and scale the empty by <i>real ÷ measured</i>.</li>
     <li><b>Heading.</b> Which compass direction the scene faces is arbitrary; rotate the empty around Z if a particular alignment is needed.</li>
