@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>360° HDRI Capture Tool — ThriceZed</title>
+<meta name="description" content="Guided 360° HDR environment capture tool.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000; --bg-alt: #0d0d0d; --bg-card: #111; --border: #262626;
+    --text: #fff; --text-muted: #9a9a9a; --text-faint: #5c5c5c;
+    --accent: #ffffff;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--font-body);
+    line-height: 1.55; overflow: hidden; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  h1, h2, h3 { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; font-weight: 400; }
+  p { color: var(--text-muted); }
+  .btn {
+    display: inline-block; padding: 0.9rem 2rem; border: 1px solid var(--text);
+    color: var(--text); background: transparent; font-family: var(--font-body);
+    font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.25s ease, color 0.25s ease; text-align: center;
+  }
+  .btn:hover, .btn:active { background: var(--text); color: var(--bg); }
+  .btn-solid { background: var(--text); color: var(--bg); }
+  .btn-solid:hover, .btn-solid:active { background: transparent; color: var(--text); }
+  .btn.disabled { opacity: 0.35; pointer-events: none; }
+
+  /* ---- Full-screen stage ---- */
+  #stage { position: fixed; inset: 0; overflow: hidden; }
+  #cam {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #000;
+  }
+  #overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* ---- Panels (intro / processing / result / error) ---- */
+  .panel {
+    position: fixed; inset: 0; z-index: 20; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2rem 1.6rem;
+    background: radial-gradient(circle at 50% 30%, #141414 0%, #000 70%);
+    padding-top: max(2rem, env(safe-area-inset-top));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+  .panel.show { display: flex; }
+  .panel .logo { height: 40px; margin-bottom: 2rem; opacity: 0.9; }
+  .panel h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); margin-bottom: 0.4rem; }
+  .panel .eyebrow {
+    font-size: 0.75rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 1.2rem;
+  }
+  .panel p { max-width: 30rem; margin: 0 auto 1.4rem; font-size: 1rem; }
+  .panel .actions { display: flex; flex-direction: column; gap: 0.9rem; width: min(20rem, 100%); margin-top: 0.6rem; }
+
+  /* ---- Top HUD during capture ---- */
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 15; display: none;
+    align-items: center; justify-content: space-between; gap: 1rem;
+    padding: max(0.9rem, env(safe-area-inset-top)) 1.1rem 0.9rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+  }
+  #hud.show { display: flex; }
+  #hud .progress-text { font-size: 0.85rem; letter-spacing: 0.08em; }
+  #hud .progress-text b { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 0.04em; }
+  #hud .hud-hint { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  #hud .hud-btn {
+    pointer-events: auto; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.5rem 0.9rem; cursor: pointer; border-radius: 2px;
+  }
+
+  /* ---- Bottom capture bar ---- */
+  #capbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: none;
+    flex-direction: column; align-items: center; gap: 0.8rem;
+    padding: 1rem 1.1rem max(1.1rem, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  }
+  #capbar.show { display: flex; }
+  #status-pill {
+    font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 0.45rem 1rem; border: 1px solid var(--border); border-radius: 999px;
+    background: rgba(0,0,0,0.5); color: var(--text-muted); transition: color .2s, border-color .2s;
+  }
+  #status-pill.locked { color: #7CFF9B; border-color: #2f7d45; }
+  #capbar .row { display: flex; gap: 0.8rem; }
+  #capbar .mini {
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font-body); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.7rem 1.2rem; cursor: pointer; border-radius: 2px;
+  }
+
+  .spinner {
+    width: 42px; height: 42px; border: 2px solid var(--border);
+    border-top-color: var(--text); border-radius: 50%;
+    animation: spin 0.9s linear infinite; margin: 0 auto 1.4rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #proc-bar-track { width: min(22rem, 100%); height: 3px; background: var(--border); margin: 0.4rem auto 0; overflow: hidden; }
+  #proc-bar { height: 100%; width: 0%; background: var(--text); transition: width 0.25s ease; }
+
+  #result-preview {
+    width: min(34rem, 100%); aspect-ratio: 2 / 1; object-fit: cover;
+    border: 1px solid var(--border); margin: 0 auto 1.4rem; background: var(--bg-card);
+  }
+  .result-meta { font-size: 0.8rem; color: var(--text-faint); letter-spacing: 0.05em; margin-bottom: 1.4rem; }
+  .warn { color: #ffcf6b; }
+
+  .link-back {
+    position: fixed; top: max(0.7rem, env(safe-area-inset-top)); left: 0.9rem; z-index: 30;
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 0.4rem 0.7rem; border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <video id="cam" playsinline autoplay muted></video>
+  <canvas id="overlay"></canvas>
+</div>
+
+<!-- HUD (during capture) -->
+<div id="hud">
+  <div class="progress-text"><b id="p-done">0</b> / <span id="p-total">0</span> tiles</div>
+  <div class="hud-hint" id="hud-hint">Follow the dots</div>
+  <button class="hud-btn" id="btn-finish">Finish</button>
+</div>
+
+<!-- Bottom capture bar -->
+<div id="capbar">
+  <div id="status-pill">Move to a target dot</div>
+  <div class="row">
+    <button class="mini" id="btn-manual">Capture now</button>
+    <button class="mini" id="btn-recenter">Recenter</button>
+  </div>
+</div>
+
+<!-- Intro panel -->
+<div class="panel show" id="panel-intro">
+  <a class="link-back" href="hdri.html">← Exit</a>
+  <img class="logo" src="assets/img/logo.png" alt="ThriceZed">
+  <div class="eyebrow">ThriceZed Labs · Beta</div>
+  <h1>360° HDRI Capture</h1>
+  <p>Hold your phone in portrait and turn slowly to follow the target dots. The tool captures the sphere and exports a <b>.hdr</b> for your 3D software.</p>
+  <p id="intro-note" style="font-size:0.85rem;color:var(--text-faint)"></p>
+  <div class="actions">
+    <button class="btn btn-solid" id="btn-start">Allow camera &amp; start</button>
+    <a class="btn" href="hdri.html">Cancel</a>
+  </div>
+</div>
+
+<!-- Processing panel -->
+<div class="panel" id="panel-proc">
+  <div class="spinner"></div>
+  <h1>Stitching sphere</h1>
+  <p id="proc-msg">Reprojecting tiles…</p>
+  <div id="proc-bar-track"><div id="proc-bar"></div></div>
+</div>
+
+<!-- Result panel -->
+<div class="panel" id="panel-result">
+  <a class="link-back" href="hdri.html">← Exit</a>
+  <h1>Your HDRI</h1>
+  <img id="result-preview" alt="Equirectangular preview">
+  <div class="result-meta" id="result-meta"></div>
+  <div class="actions">
+    <button class="btn btn-solid" id="btn-dl-hdr">Download .hdr</button>
+    <button class="btn" id="btn-dl-jpg">Download preview .jpg</button>
+    <button class="btn" id="btn-restart">Capture another</button>
+  </div>
+</div>
+
+<!-- Error panel -->
+<div class="panel" id="panel-error">
+  <a class="link-back" href="hdri.html">← Exit</a>
+  <h1>Can't start</h1>
+  <p id="error-msg">Something went wrong.</p>
+  <div class="actions">
+    <button class="btn btn-solid" id="btn-retry">Try again</button>
+    <a class="btn" href="hdri.html">Back</a>
+  </div>
+</div>
+
+<script src="js/hdri-app.js?v=1"></script>
+</body>
+</html>

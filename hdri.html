@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>360° HDRI Capture — ThriceZed</title>
+<meta name="description" content="Capture a full 360° HDR environment map for lighting CGI scenes, guided like Street View. A ThriceZed Labs tool.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=7">
+<style>
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
+
+  .step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 2rem;
+  }
+  .step .num {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    color: var(--text-faint);
+    line-height: 1;
+    margin-bottom: 0.8rem;
+  }
+  .step h4 { margin-bottom: 0.6rem; }
+  .step p { font-size: 0.95rem; }
+
+  .req {
+    margin-top: 3rem;
+    border-left: 2px solid var(--text);
+    padding: 0.4rem 0 0.4rem 1.2rem;
+  }
+  .req p { font-size: 0.9rem; margin-bottom: 0.6rem; }
+  .req p:last-child { margin-bottom: 0; }
+  .req strong { color: var(--text); font-weight: 600; }
+
+  .launch-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2.5rem;
+  }
+  .lead {
+    max-width: 640px;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="logo"><img src="assets/img/logo.png" alt="ThriceZed"></a>
+  <nav class="site-nav">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="software.html">Software</a></li>
+      <li><a href="portfolio.html">Portfolio</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="hero-eyebrow" style="opacity:1;transform:none;">ThriceZed Labs · Beta</div>
+  <h2>360° HDRI Capture</h2>
+</section>
+
+<section class="container">
+  <p class="lead reveal">
+    Shoot a full 360° high-dynamic-range environment map with just your phone — the kind
+    of HDRI you drop into Blender, Maya, or Unreal to light a CGI scene with real-world
+    lighting. The tool guides you like Google Street View: hold up your phone, follow the
+    dots around you, and it captures and stitches the sphere automatically.
+  </p>
+
+  <div class="launch-row reveal">
+    <a href="hdri-app.html" class="btn btn-solid">Launch the tool</a>
+    <a href="software.html" class="btn">Back to Software</a>
+  </div>
+
+  <div class="steps reveal">
+    <div class="step">
+      <div class="num">01</div>
+      <h4>Aim &amp; follow</h4>
+      <p>Point your phone's rear camera at the world. Floating target dots appear around you — line the reticle up with each one.</p>
+    </div>
+    <div class="step">
+      <div class="num">02</div>
+      <h4>Auto-capture</h4>
+      <p>When you're on target, the tool snaps the tile automatically — bracketing exposures where your device allows it, so highlights and shadows both survive.</p>
+    </div>
+    <div class="step">
+      <div class="num">03</div>
+      <h4>Stitch &amp; export</h4>
+      <p>It reprojects every tile into a seamless equirectangular sphere and hands you a true <strong>.hdr</strong> file, ready for your 3D software.</p>
+    </div>
+  </div>
+
+  <div class="req reveal">
+    <p><strong>What you'll need.</strong> A phone with a rear camera and motion sensors, opened over HTTPS (this page qualifies). Hold the phone in portrait and turn your whole body to sweep the scene.</p>
+    <p><strong>About true HDR.</strong> Genuine high-dynamic-range needs multiple exposures per angle. Android Chrome generally allows the tool to bracket exposures for real HDR. On iPhone, Safari does not expose camera-exposure control to web apps, so iOS captures a single exposure per tile — still a valid .hdr, but with a narrower dynamic range. For hero shots, a dedicated bracketing camera app will always win; this is built for speed and convenience on location.</p>
+    <p><strong>Tip.</strong> Keep the camera roughly over the same spot as you turn, avoid moving people or cars, and lock focus by staying still for a beat on each dot.</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <img src="assets/img/logo.png" alt="ThriceZed">
+  <div class="social-links">
+    <a href="https://www.instagram.com/thricezed" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.youtube.com/@thricezed" target="_blank" rel="noopener">YouTube</a>
+  </div>
+  <p>&copy; 2026 ThriceZed. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js?v=2"></script>
+</body>
+</html>
