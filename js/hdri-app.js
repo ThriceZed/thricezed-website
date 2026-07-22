@@ -1,20 +1,26 @@
 /* ============================================================================
-   ThriceZed 360° HDRI Capture — guided, Street-View-style environment capture.
+   ThriceZed 360° HDRI Capture: guided 360° environment capture.
 
    Pipeline:
      1. Live rear-camera preview + device-orientation tracking.
      2. Target dots arranged on a sphere; when the phone's view aligns with a
         dot we auto-capture that tile (bracketing exposures where the browser
-        allows it) and store the frame + its orientation matrix + exposure.
+        allows it) and store the frame + its orientation quaternion + exposure.
      3. Reproject every tile into an equirectangular buffer in linear light,
         merging exposures into HDR radiance.
      4. Export a Radiance .hdr file + a tone-mapped .jpg preview.
 
-   Notes / honest limits:
-     - Stitching uses the device-orientation of each frame (not feature
-       matching), so seam quality depends on sensor accuracy. Overlap +
-       feathering hide most of it. This is a convenience tool, not a
-       replacement for a tripod + bracketing rig.
+   Orientation math: we build the camera rotation as a quaternion the same way
+   THREE.js DeviceOrientationControls does (Euler order YXZ + a -90° X twist so
+   the camera looks out the back of the phone, + a screen-orientation term).
+   This keeps the common "phone held upright at the horizon" pose at the stable
+   centre of the range instead of Euler gimbal-lock, which otherwise makes the
+   guide dots jump around and scatters the stitched tiles. World frame is Y-up.
+
+   Honest limits:
+     - Stitching uses each frame's device orientation (not feature matching),
+       so seam quality depends on sensor accuracy. Overlap + feathering hide
+       most of it. This is a convenience tool, not a tripod bracketing rig.
      - True exposure bracketing needs MediaStreamTrack exposure control, which
        Android Chrome usually offers and iOS Safari does not. Without it we
        capture one exposure per tile (still a valid, narrower-range .hdr).
@@ -22,9 +28,10 @@
 (function () {
   'use strict';
 
-  // ---- Assumed camera field of view (horizontal), degrees. Typical phone
-  //      main camera in video mode. Approximate; overlap forgives the error.
-  var HFOV_DEG = 65;
+  // ---- Assumed camera DIAGONAL field of view, degrees. Typical phone main
+  //      camera. Deriving focal length from the frame diagonal makes it
+  //      orientation-independent; overlap forgives the remaining error.
+  var DFOV_DEG = 72;
 
   // ---- Capture geometry
   var ALIGN_DEG = 10;      // how close the view must be to a dot to lock
@@ -53,7 +60,7 @@
   var orient = { alpha: 0, beta: 0, gamma: 0, ok: false };
   var screenAngle = 0;
   var targets = [];        // {dir:[x,y,z], done:bool}
-  var captures = [];       // {R:Float64Array(9), ev:number, w,h, data:Uint8ClampedArray}
+  var captures = [];       // {q:[x,y,z,w], ev:number, w,h, data:Uint8ClampedArray}
   var lockedIdx = -1, lockStart = 0, capturing = false, running = false;
   var exposure = { supported: false, evs: [0], caps: null };
   var grabCanvas = document.createElement('canvas');
@@ -63,44 +70,61 @@
 
   // ============================================================ math helpers
 
-  // World<-device rotation matrix (row-major 9) from device orientation angles
-  // (W3C Device Orientation "getRotationMatrix", ZXY order). World frame:
-  // +Z up, +X ~east, +Y ~north when the phone lies flat, screen up.
-  function rotationMatrix(alphaDeg, betaDeg, gammaDeg) {
-    var x = betaDeg * DEG, y = gammaDeg * DEG, z = alphaDeg * DEG;
-    var cX = Math.cos(x), cY = Math.cos(y), cZ = Math.cos(z);
-    var sX = Math.sin(x), sY = Math.sin(y), sZ = Math.sin(z);
-    var m = new Float64Array(9);
-    m[0] = cZ * cY - sZ * sX * sY; m[1] = -cX * sZ; m[2] = cY * sZ * sX + cZ * sY;
-    m[3] = cY * sZ + cZ * sX * sY; m[4] = cX * cZ;  m[5] = sZ * sY - cZ * cY * sX;
-    m[6] = -cX * sY;               m[7] = sX;       m[8] = cX * cY;
-    return m;
-  }
-
-  // m * v  (row-major 3x3 times vec3)
-  function mulMV(m, v) {
-    return [
-      m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-      m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
-      m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
-    ];
-  }
-  // m^T * v  (transpose times vec3) — world -> device
-  function mulMtV(m, v) {
-    return [
-      m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
-      m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
-      m[2] * v[0] + m[5] * v[1] + m[8] * v[2]
-    ];
-  }
   function normalize(v) {
     var l = Math.hypot(v[0], v[1], v[2]) || 1;
     return [v[0] / l, v[1] / l, v[2] / l];
   }
 
-  // The world direction the rear camera currently points: device -Z, into world.
-  function cameraForward(m) {
-    return normalize([-m[2], -m[5], -m[8]]);
+  // ---- Quaternions stored as [x, y, z, w] ----
+  function quatMul(a, b) {
+    return [
+      a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+      a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+      a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+      a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]
+    ];
+  }
+  // rotate vec3 v by quaternion q
+  function quatApply(q, v) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var tx = 2 * (y * v[2] - z * v[1]);
+    var ty = 2 * (z * v[0] - x * v[2]);
+    var tz = 2 * (x * v[1] - y * v[0]);
+    return [
+      v[0] + w * tx + (y * tz - z * ty),
+      v[1] + w * ty + (z * tx - x * tz),
+      v[2] + w * tz + (x * ty - y * tx)
+    ];
+  }
+  function quatConj(q) { return [-q[0], -q[1], -q[2], q[3]]; }
+
+  var HALF = Math.sqrt(0.5);
+  var Q_BACK = [-HALF, 0, 0, HALF]; // -90° about X: camera looks out the phone's back
+
+  // Device orientation (deg) + screen angle (deg) -> camera quaternion.
+  // Mirrors THREE.js DeviceOrientationControls: Euler(beta, alpha, -gamma, YXZ),
+  // then the back-facing twist, then the screen-orientation term. World is Y-up.
+  function orientationQuat(alphaDeg, betaDeg, gammaDeg, screenDeg) {
+    var x = betaDeg * DEG, y = alphaDeg * DEG, z = -gammaDeg * DEG; // Euler YXZ inputs
+    var c1 = Math.cos(x / 2), c2 = Math.cos(y / 2), c3 = Math.cos(z / 2);
+    var s1 = Math.sin(x / 2), s2 = Math.sin(y / 2), s3 = Math.sin(z / 2);
+    var qe = [
+      s1 * c2 * c3 + c1 * s2 * s3,
+      c1 * s2 * c3 - s1 * c2 * s3,
+      c1 * c2 * s3 - s1 * s2 * c3,
+      c1 * c2 * c3 + s1 * s2 * s3
+    ];
+    var s = -screenDeg * DEG / 2;
+    var q0 = [0, 0, Math.sin(s), Math.cos(s)]; // -screen about Z
+    return quatMul(quatMul(qe, Q_BACK), q0);
+  }
+
+  // The world direction the rear camera points (camera local -Z into world).
+  function cameraForward(q) { return quatApply(q, [0, 0, -1]); }
+
+  // Focal length in pixels for a frame of size w×h, from the diagonal FOV.
+  function focalFromFrame(w, h) {
+    return (Math.hypot(w, h) / 2) / Math.tan((DFOV_DEG * DEG) / 2);
   }
 
   // ============================================================ target sphere
@@ -121,22 +145,23 @@
         targets.push({ dir: dirFromAzEl(az, r.el), done: false });
       }
     });
-    targets.push({ dir: [0, 0, 1], done: false });   // zenith (up)
-    targets.push({ dir: [0, 0, -1], done: false });  // nadir (down)
+    targets.push({ dir: [0, 1, 0], done: false });   // zenith (up)
+    targets.push({ dir: [0, -1, 0], done: false });  // nadir (down)
     pTotal.textContent = targets.length;
   }
 
-  // azimuth around +Z-up, elevation from horizon. Matches equirect mapping below.
+  // azimuth around +Y-up, elevation from horizon. Azimuth 0 == -Z (neutral
+  // forward). Matches the equirect mapping below and the quaternion frame.
   function dirFromAzEl(azDeg, elDeg) {
     var az = azDeg * DEG, el = elDeg * DEG;
     var c = Math.cos(el);
-    return [c * Math.cos(az), c * Math.sin(az), Math.sin(el)];
+    return [c * Math.sin(az), Math.sin(el), -c * Math.cos(az)];
   }
 
-  // world dir -> equirect pixel (u,v). +Z up.
+  // world dir -> equirect pixel (u,v). +Y up, longitude 0 at -Z.
   function dirToUV(d) {
-    var lon = Math.atan2(d[1], d[0]);        // -pi..pi
-    var lat = Math.asin(Math.max(-1, Math.min(1, d[2]))); // -pi/2..pi/2
+    var lon = Math.atan2(d[0], -d[2]);       // -pi..pi
+    var lat = Math.asin(Math.max(-1, Math.min(1, d[1]))); // -pi/2..pi/2
     return [(lon / (2 * Math.PI) + 0.5) * OUT_W, (0.5 - lat / Math.PI) * OUT_H];
   }
 
@@ -154,18 +179,13 @@
     octx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  // Project a world direction to screen pixel using the current view matrix and
-  // assumed FOV. Returns {x,y,front} in CSS pixels, or null if behind camera.
-  function projectToScreen(m, dir) {
-    var p = mulMtV(m, dir);              // world -> device
-    // compensate for screen rotation (keep dots stable in landscape)
-    var a = -screenAngle * DEG;
-    var rx = p[0] * Math.cos(a) - p[1] * Math.sin(a);
-    var ry = p[0] * Math.sin(a) + p[1] * Math.cos(a);
-    p = [rx, ry, p[2]];
-    if (p[2] >= -0.001) return null;      // behind or at camera plane
+  // Project a world direction to a screen pixel using the current camera
+  // quaternion. Returns {x,y} in CSS pixels, or null if behind the camera.
+  function projectToScreen(q, dir) {
+    var p = quatApply(quatConj(q), dir);  // world -> camera local
+    if (p[2] >= -0.001) return null;      // behind or on the camera plane
     var W = window.innerWidth, H = window.innerHeight;
-    var f = (W / 2) / Math.tan((HFOV_DEG * DEG) / 2);
+    var f = focalFromFrame(W, H);
     var x = W / 2 + f * (p[0] / -p[2]);
     var y = H / 2 - f * (p[1] / -p[2]);
     return { x: x, y: y };
@@ -174,7 +194,7 @@
   function drawOverlay() {
     octx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     if (!orient.ok || !running) { return; }
-    var m = rotationMatrix(orient.alpha, orient.beta, orient.gamma);
+    var m = orientationQuat(orient.alpha, orient.beta, orient.gamma, screenAngle);
     var cx = window.innerWidth / 2, cy = window.innerHeight / 2;
 
     // center reticle
@@ -210,7 +230,7 @@
     if (!running) return;
     drawOverlay();
     if (!capturing && orient.ok) {
-      var m = rotationMatrix(orient.alpha, orient.beta, orient.gamma);
+      var m = orientationQuat(orient.alpha, orient.beta, orient.gamma, screenAngle);
       var fwd = cameraForward(m);
       // find nearest un-done target to the current view center
       var best = -1, bestAng = 1e9;
@@ -257,7 +277,7 @@
     } catch (e) { /* ignore, treat as single exposure */ }
   }
 
-  async function captureTile(idx, m) {
+  async function captureTile(idx, q) {
     capturing = true;
     hudHint.textContent = 'Capturing…';
     var evList = exposure.supported ? exposure.evs : [0];
@@ -266,7 +286,7 @@
       var f = grabFrame();
       if (f) {
         captures.push({
-          R: m, ev: Math.pow(2, evList[k]), w: f.w, h: f.h, data: f.data
+          q: q, ev: Math.pow(2, evList[k]), w: f.w, h: f.h, data: f.data
         });
       }
     }
@@ -305,23 +325,22 @@
     var accR = new Float32Array(N), accG = new Float32Array(N), accB = new Float32Array(N);
     var accW = new Float32Array(N);
 
-    var f = (TILE_W / 2) / Math.tan((HFOV_DEG * DEG) / 2); // focal in tile px (x)
     var procBar = $('proc-bar'), procMsg = $('proc-msg');
 
     for (var ci = 0; ci < captures.length; ci++) {
       var cap = captures[ci];
-      var m = cap.R, data = cap.data, w = cap.w, h = cap.h;
+      var q = cap.q, data = cap.data, w = cap.w, h = cap.h;
       var cxp = w / 2, cyp = h / 2;
-      var fx = f, fy = f; // square pixels
+      var fx = focalFromFrame(w, h), fy = fx; // square pixels, diagonal-FOV focal
       for (var sy = 0; sy < h; sy++) {
         for (var sx = 0; sx < w; sx++) {
           var o = (sy * w + sx) * 4;
           var r8 = data[o], g8 = data[o + 1], b8 = data[o + 2];
-          // device-space ray for this pixel (camera looks along -Z)
+          // camera-local ray for this pixel (camera looks along -Z)
           var xp = (sx + 0.5 - cxp) / fx;
           var yp = (cyp - (sy + 0.5)) / fy;
           var dv = normalize([xp, yp, -1]);
-          var world = mulMV(m, dv);
+          var world = quatApply(q, dv);
           var uv = dirToUV(world);
           var lum = 0.2126 * r8 + 0.7152 * g8 + 0.0722 * b8;
           // radial feather: fade tile edges to hide seams
@@ -403,7 +422,7 @@
 
   // ============================================================ HDR encoding
 
-  // Radiance .hdr (RGBE), flat/old-format scanlines — widely readable (Blender,
+  // Radiance .hdr (RGBE), flat/old-format scanlines, widely readable (Blender,
   // Maya, Nuke, PBRT). Input: linear radiance Float32Array length W*H*3.
   function encodeHDR(rad, W, H) {
     var header = '#?RADIANCE\nSOFTWARE=ThriceZed HDRI Capture\nFORMAT=32-bit_rle_rgbe\n\n-Y ' + H + ' +X ' + W + '\n';
@@ -597,8 +616,8 @@
     requestAnimationFrame(tick);
 
     if (!orient.ok) {
-      // sensors never fired — likely a desktop or blocked; let them try but warn
-      setStatus(false, 'No motion sensor detected — use a phone');
+      // sensors never fired; likely a desktop or blocked, so let them try but warn
+      setStatus(false, 'No motion sensor detected. Use a phone');
     }
   }
 
@@ -613,7 +632,7 @@
   });
   $('btn-manual').addEventListener('click', function () {
     if (!running || capturing || !orient.ok) return;
-    var m = rotationMatrix(orient.alpha, orient.beta, orient.gamma);
+    var m = orientationQuat(orient.alpha, orient.beta, orient.gamma, screenAngle);
     var fwd = cameraForward(m);
     var best = -1, bestAng = 1e9;
     for (var i = 0; i < targets.length; i++) {
@@ -644,11 +663,4 @@
 
   // ---------------------------------------------------------------- init
   readScreenAngle();
-  (function introNote() {
-    var ua = navigator.userAgent || '';
-    var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    $('intro-note').textContent = isIOS
-      ? 'On iPhone, tiles are captured at a single exposure (iOS blocks web exposure control), so dynamic range is limited.'
-      : 'This device may support exposure bracketing for true HDR — we’ll detect it when the camera starts.';
-  })();
 })();
