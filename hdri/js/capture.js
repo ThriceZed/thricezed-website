@@ -110,7 +110,7 @@ export class CaptureSession {
     this._loop = this._loop.bind(this);
     this._raf = requestAnimationFrame(this._loop);
     this.hud.hint.textContent = !this.manualMode
-      ? 'Point at the glowing target'
+      ? 'Point at a circle and hold still'
       : (this._permission === 'denied' && !this.demo)
         ? 'Motion access denied. Reload and tap Allow, or drag to aim'
         : 'Drag to aim. Hold on a circle to capture';
@@ -276,19 +276,6 @@ export class CaptureSession {
     }
     if (best < 0) return;
 
-    // glow the recommended target
-    const pulse = 0.55 + 0.35 * Math.sin(t * 0.006);
-    for (const tg of this.targets) {
-      if (tg.done) continue;
-      tg.outline.material.opacity = 0.45;
-      tg.fill.material.opacity = 0;
-      tg.group.scale.setScalar(1);
-    }
-    const bt = this.targets[best];
-    bt.outline.material.opacity = 1;
-    bt.fill.material.opacity = 0.12 * pulse;
-    bt.group.scale.setScalar(1 + 0.08 * pulse);
-
     const circ = 289;
     const hintFree = t > (this._hintUntil || 0);
     if (bestAng < ALIGN_DEG && rate < MAX_TURN_RATE) {
@@ -303,7 +290,7 @@ export class CaptureSession {
       if (!this.capturing && hintFree) {
         this.hud.hint.textContent = this.manualMode
           ? 'Drag to aim. Hold on a circle to capture'
-          : (bestAng < 25 ? 'Almost there' : 'Point at the glowing target');
+          : 'Point at a circle and hold still';
       }
     }
   }

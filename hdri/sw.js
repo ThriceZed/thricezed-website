@@ -1,7 +1,7 @@
 /* TZHDRI service worker: precaches the app shell so capture sessions keep
    working offline once the tool has been opened at least once. */
 
-const CACHE = 'tzhdri-v4';
+const CACHE = 'tzhdri-v5';
 
 const SHELL = [
   './',
