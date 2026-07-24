@@ -22,7 +22,11 @@ import * as THREE from 'three';
 import { frameFov } from './capture.js';
 
 const K1 = -0.07;          // gentle barrel undistortion typical of phone mains
-const FEATHER = 0.22;      // frame-edge feather width in texture space
+const CROP = 0.92;         // discard frame edges beyond this ndc radius; FOV
+                           // guess and distortion errors are worst out there
+const FEATHER = 0.18;      // feather width inside the crop, in ndc units
+const CENTER_POW = 4.0;    // exp falloff strength favouring frame centres;
+                           // higher = narrower blend bands, less ghosting
 const DILATE_PASSES = 12;
 
 const QUAT_GLSL = `
@@ -63,7 +67,8 @@ const PROJECT_FRAG = `
     if (r2 > 2.5) { discard; }
     pn *= 1.0 + uK1 * r2;
     vec2 ndc = pn / uTanHV;
-    if (abs(ndc.x) >= 1.0 || abs(ndc.y) >= 1.0) { discard; }
+    float edge = max(abs(ndc.x), abs(ndc.y));
+    if (edge >= ${CROP.toFixed(3)}) { discard; }
     vec2 tuv = ndc * 0.5 + 0.5;
     vec3 srgb = texture2D(uTex, tuv).rgb;
     vec3 lin = srgb2lin(srgb);
@@ -75,9 +80,11 @@ const PROJECT_FRAG = `
     float wHi = max(1.0 - smoothstep(0.88, 0.99, m), uWHiFloor);
     float wLo = max(smoothstep(0.015, 0.09, m), uWLoFloor);
     float wVal = mix(wLo * wHi, 1.0, uSingle);
-    vec2 eb = min(tuv, 1.0 - tuv);
-    float wEdge = smoothstep(0.0, ${FEATHER.toFixed(3)}, min(eb.x, eb.y));
-    float w = wVal * wEdge + 1e-5;
+    float wEdge = smoothstep(0.0, ${FEATHER.toFixed(3)}, ${CROP.toFixed(3)} - edge);
+    // strongly favour whichever frame saw this direction nearest its centre,
+    // so overlaps become narrow transitions instead of wide ghosting blends
+    float wCenter = exp(-${CENTER_POW.toFixed(1)} * r2);
+    float w = wVal * wEdge * wCenter + 1e-6;
     gl_FragColor = vec4(lin * uScale * w, w);
   }
 `;

@@ -14,10 +14,11 @@ import * as THREE from 'three';
 import { OrientationService } from './orientation.js';
 
 export const ASSUMED_DFOV = 70;   // assumed diagonal FOV of phone main camera, degrees
-const ALIGN_DEG = 9;              // view must be this close to a target to lock
-const HOLD_MS = 500;              // steady time before auto capture
-const MAX_TURN_RATE = 35;         // deg/s; faster than this cancels the lock
-const GRAB_LONG_EDGE = 1600;      // stored frame long edge, px
+const ALIGN_DEG = 6;              // view must be this close to a target to lock
+const HOLD_MS = 650;              // steady time before auto capture
+const MAX_TURN_RATE = 15;         // deg/s; faster than this cancels the lock
+const DRIFT_ABORT_DEG = 3.5;      // moving this far mid-bracket retries the shot
+const GRAB_LONG_EDGE = 1920;      // stored frame long edge, px
 const JPEG_Q = 0.92;
 const BRACKET_EVS = [-2, 0, 2];
 const SETTLE_MS = 350;            // wait after changing exposure compensation
@@ -231,6 +232,12 @@ export class CaptureSession {
     return out.setFromEuler(e);
   }
 
+  _currentQuat() {
+    return this.manualMode
+      ? this._manualQuat(new THREE.Quaternion())
+      : this.orientation.quaternion.clone();
+  }
+
   /* ------------------------------------------------ HUD */
 
   _initHud() {
@@ -332,16 +339,17 @@ export class CaptureSession {
     bt.group.scale.setScalar(1 + 0.08 * pulse);
 
     const circ = 289;
+    const hintFree = t > (this._hintUntil || 0);
     if (bestAng < ALIGN_DEG && rate < MAX_TURN_RATE) {
       if (this._lockIdx !== best) { this._lockIdx = best; this._lockStart = t; }
       const p = Math.min(1, (t - this._lockStart) / HOLD_MS);
       this.hud.ringFill.style.strokeDashoffset = circ * (1 - p);
-      this.hud.hint.textContent = 'Hold steady';
+      if (hintFree) this.hud.hint.textContent = 'Hold steady';
       if (p >= 1) this._capture(best);
     } else {
       this._lockIdx = -1;
       this.hud.ringFill.style.strokeDashoffset = circ;
-      if (!this.capturing) {
+      if (!this.capturing && hintFree) {
         this.hud.hint.textContent = this.manualMode
           ? 'Drag to aim. Hold on a circle to capture'
           : (bestAng < 25 ? 'Almost there' : 'Point at the glowing target');
@@ -358,8 +366,9 @@ export class CaptureSession {
     const tg = this.targets[idx];
     this.hud.hint.textContent = 'Capturing. Hold still';
     try {
-      const q = this.camera.quaternion.clone();
+      const q0 = this._currentQuat();
       const evs = this.demo ? [-4, 0, 2] : this.evs;
+      const bracket = [];
       for (const ev of evs) {
         if (!this.demo && this.hdrTrue) {
           try {
@@ -367,11 +376,22 @@ export class CaptureSession {
             await new Promise(r => setTimeout(r, SETTLE_MS));
           } catch { /* keep going with whatever exposure we get */ }
         }
+        // each frame gets the orientation it was actually taken at; if the
+        // phone drifted off the lock pose, scrap the set and retry the target
+        const q = this._currentQuat();
+        const drift = 2 * Math.acos(Math.min(1, Math.abs(q0.dot(q)))) / DEG;
+        if (drift > DRIFT_ABORT_DEG) {
+          this.hud.hint.textContent = 'Moved during capture. Hold still and retry';
+          this._hintUntil = performance.now() + 1600;
+          this.hud.ringFill.style.strokeDashoffset = 289;
+          return;
+        }
         const shot = this.demo ? await this._grabDemo(q, ev) : await this._grabFrame();
         shot.q = [q.x, q.y, q.z, q.w];
         shot.ev = ev;
-        this.shots.push(shot);
+        bracket.push(shot);
       }
+      this.shots.push(...bracket);
       if (!this.demo && this.hdrTrue) {
         try { await this.track.applyConstraints({ advanced: [{ exposureCompensation: 0 }] }); } catch { }
       }
