@@ -12,8 +12,6 @@ const FRAG = `
   varying vec3 vDir;
   uniform sampler2D uTex;
   uniform float uExposure;   // 2^ev
-  uniform float uClip;       // 1 = show clipping overlay
-  uniform float uLdr;        // 1 = tone-mapped JPEG preview mode
   vec3 aces(vec3 x) {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
@@ -26,16 +24,7 @@ const FRAG = `
     float lat = asin(clamp(d.y, -1.0, 1.0));
     vec2 uv = vec2(lon / 6.28318530718 + 0.5, 0.5 - lat / 3.14159265359);
     vec3 lin = texture2D(uTex, uv).rgb;
-    vec3 exposed = lin * uExposure;
-    vec3 col = uLdr > 0.5 ? aces(lin) : clamp(exposed, 0.0, 1.0);
-    col = lin2srgb(col);
-    if (uClip > 0.5) {
-      float hi = step(1.0, max(exposed.r, max(exposed.g, exposed.b)));
-      float lo = step(max(exposed.r, max(exposed.g, exposed.b)), 0.002);
-      col = mix(col, vec3(1.0, 0.1, 0.1), hi * 0.85);
-      col = mix(col, vec3(0.15, 0.25, 1.0), lo * 0.85);
-    }
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(lin2srgb(aces(lin * uExposure)), 1.0);
   }
 `;
 
@@ -61,8 +50,6 @@ export class PanoViewer {
       uniforms: {
         uTex: { value: null },
         uExposure: { value: 1 },
-        uClip: { value: 0 },
-        uLdr: { value: 0 },
       },
     });
     this.scene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 64, 48), this.material));
@@ -103,8 +90,6 @@ export class PanoViewer {
   }
 
   setExposureEv(ev) { this.material.uniforms.uExposure.value = Math.pow(2, ev); }
-  setClipping(on) { this.material.uniforms.uClip.value = on ? 1 : 0; }
-  setLdrCompare(on) { this.material.uniforms.uLdr.value = on ? 1 : 0; }
 
   start() {
     if (this.running) return;

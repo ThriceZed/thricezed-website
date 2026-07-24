@@ -241,52 +241,7 @@ export class CaptureSession {
   /* ------------------------------------------------ HUD */
 
   _initHud() {
-    this.hud.total.textContent = this.targets.length;
-    this.hud.done.textContent = '0';
     this.hud.pct.textContent = '0';
-    this.hud.expo.textContent = this.demo
-      ? 'DEMO · SIM HDR'
-      : (this.hdrTrue ? `HDR BRACKETS ${this.evs[0]} / ${this.evs[this.evs.length - 1]} EV` : 'SINGLE EXPOSURE · APPROX HDR');
-    // compass tape: labels every 45 degrees across several wraps
-    const labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    let html = '';
-    for (let d = -720; d <= 720; d += 45) {
-      html += `<span>${labels[((d % 360) + 360) % 360 / 45]}</span>`;
-    }
-    this.hud.compassTape.innerHTML = html;
-    const hm = this.hud.heatmap.getContext('2d');
-    hm.clearRect(0, 0, 96, 48);
-    hm.fillStyle = 'rgba(255,255,255,0.06)';
-    hm.fillRect(0, 0, 96, 48);
-  }
-
-  _updateHud(fwd, roll) {
-    const heading = Math.atan2(fwd.x, -fwd.z) / DEG;
-    // span for heading H is centred at ((H+720)/45)*60 + 30 px from tape start
-    const x = -(((heading + 720) / 45) * 60 + 30);
-    this.hud.compassTape.style.transform = `translateX(${x}px)`;
-    const pitch = Math.asin(Math.max(-1, Math.min(1, fwd.y))) / DEG;
-    const dy = Math.max(-46, Math.min(46, pitch * 2.2));
-    this.hud.horizon.style.transform = `translateY(${dy}px) rotate(${(-roll / DEG).toFixed(1)}deg)`;
-    this.hud.horizon.style.opacity = Math.abs(pitch) > 55 ? 0.15 : 0.8;
-  }
-
-  _splatHeatmap(dir) {
-    const ctx = this.hud.heatmap.getContext('2d');
-    const lon = Math.atan2(dir.x, -dir.z);
-    const lat = Math.asin(Math.max(-1, Math.min(1, dir.y)));
-    const x = (lon / (2 * Math.PI) + 0.5) * 96;
-    const y = (0.5 - lat / Math.PI) * 48;
-    const rx = Math.min(48, 7 / Math.max(0.12, Math.cos(lat)));
-    ctx.save();
-    ctx.globalAlpha = 0.85;
-    ctx.fillStyle = '#fff';
-    for (const wrap of [-96, 0, 96]) {
-      ctx.beginPath();
-      ctx.ellipse(x + wrap, y, rx, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
   }
 
   /* ------------------------------------------------ main loop */
@@ -305,10 +260,6 @@ export class CaptureSession {
     this._prevQ.copy(q);
 
     const fwd = this._tmpV.set(0, 0, -1).applyQuaternion(q);
-    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
-    const roll = Math.atan2(up.x * fwd.z - up.z * fwd.x, up.y * Math.hypot(fwd.x, fwd.z) || 1e-6);
-    this._updateHud(fwd, Math.abs(fwd.y) > 0.995 ? 0 : roll);
-
     if (!this.capturing) this._updateTargets(fwd, rate, t);
 
     if (this.demoEnv) this.demoEnv.material.uniforms.uExposure.value = 1.0;
@@ -399,13 +350,11 @@ export class CaptureSession {
       tg.outline.material.opacity = 0.9;
       tg.fill.material.opacity = 0.55;
       tg.group.scale.setScalar(1);
-      this._splatHeatmap(tg.dir);
       this.hud.flash.classList.add('on');
       setTimeout(() => this.hud.flash.classList.remove('on'), 60);
       if (navigator.vibrate) navigator.vibrate(25);
 
       const done = this.targets.filter(x => x.done).length;
-      this.hud.done.textContent = done;
       this.hud.pct.textContent = Math.round(100 * done / this.targets.length);
       this.hud.ringFill.style.strokeDashoffset = 289;
 
@@ -464,20 +413,40 @@ export class CaptureSession {
         varying vec3 vDir;
         uniform float uExposure;
         float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float vnoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                     mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+        }
+        float fbm(vec2 p) {
+          return vnoise(p) * 0.5 + vnoise(p * 2.13) * 0.3 + vnoise(p * 4.7) * 0.2;
+        }
         vec3 env(vec3 d) {
           d = normalize(d);
           vec3 sunDir = normalize(vec3(0.5, 0.55, -0.6));
-          // sky gradient
+          // sky gradient with non-repeating clouds
           float h = clamp(d.y, -1.0, 1.0);
           vec3 sky = mix(vec3(0.65, 0.72, 0.85), vec3(0.12, 0.2, 0.45), pow(max(h, 0.0), 0.6));
+          vec2 sph = vec2(atan(d.x, -d.z), asin(h));
+          if (d.y > 0.02) {
+            float cl = fbm(sph * vec2(2.5, 7.0) + 13.7);
+            sky = mix(sky, vec3(0.95), smoothstep(0.55, 0.8, cl) * 0.6 * smoothstep(0.02, 0.15, d.y));
+          }
+          // fine mottling everywhere so the scene carries matchable texture
+          // at all elevations, like real environments do
+          sky *= 0.88 + 0.24 * fbm(sph * 11.0) + 0.1 * vnoise(sph * 37.0);
           // sun: small very bright disk plus halo (HDR values well above 1)
           float cs = dot(d, sunDir);
           float sun = smoothstep(0.9993, 0.9998, cs) * 60.0 + pow(max(cs, 0.0), 400.0) * 4.0;
-          // ground: checker projected on a plane 1.6 units below eye level
+          // ground: mottled tiles, every cell uniquely shaded so patch
+          // matching has non-periodic structure to lock onto
           if (d.y < -0.02) {
             vec2 g = d.xz * (1.6 / -d.y);
-            float ck = mod(floor(g.x) + floor(g.y), 2.0);
-            vec3 ground = mix(vec3(0.16), vec3(0.28), ck);
+            vec2 cell = floor(g);
+            float shade = 0.12 + 0.3 * hash(cell) + 0.12 * fbm(g * 1.7);
+            vec3 tint = vec3(0.9 + 0.2 * hash(cell + 7.0), 1.0, 0.9 + 0.2 * hash(cell + 3.0));
+            vec3 ground = shade * tint;
             float fade = smoothstep(0.0, 0.25, -d.y);
             return mix(sky * 0.4, ground, fade);
           }
@@ -502,14 +471,15 @@ export class CaptureSession {
     this.demoEnv = new THREE.Mesh(new THREE.SphereGeometry(50, 48, 32), mat);
     this.scene.add(this.demoEnv);
     this.video.style.display = 'none';
-    // offscreen renderer for demo grabs
+    // offscreen renderer for demo grabs; portrait like a real phone so ring
+    // overlap matches what actual captures see
     this._demoCanvas = document.createElement('canvas');
-    this._demoCanvas.width = 1280; this._demoCanvas.height = 720;
+    this._demoCanvas.width = 720; this._demoCanvas.height = 1280;
     this._demoRenderer = new THREE.WebGLRenderer({ canvas: this._demoCanvas, antialias: true });
     this._demoScene = new THREE.Scene();
     this._demoScene.add(new THREE.Mesh(this.demoEnv.geometry, mat.clone()));
-    const f = frameFov(1280, 720);
-    this._demoCamera = new THREE.PerspectiveCamera(f.vfov, 1280 / 720, 0.1, 100);
+    const f = frameFov(720, 1280);
+    this._demoCamera = new THREE.PerspectiveCamera(f.vfov, 720 / 1280, 0.1, 100);
   }
 
   async _grabDemo(q, ev) {
@@ -518,6 +488,6 @@ export class CaptureSession {
     this._demoCamera.quaternion.copy(q);
     this._demoRenderer.render(this._demoScene, this._demoCamera);
     const blob = await new Promise(r => this._demoCanvas.toBlob(r, 'image/jpeg', JPEG_Q));
-    return { blob, w: 1280, h: 720, meanLum: 0.4 * Math.pow(2, ev) };
+    return { blob, w: 720, h: 1280, meanLum: 0.4 * Math.pow(2, ev) };
   }
 }

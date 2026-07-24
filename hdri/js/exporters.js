@@ -207,17 +207,6 @@ export async function exportJPEG({ width, height, data }, quality = 0.9) {
   return new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
 }
 
-/* Small tone-mapped thumbnail for project cards. */
-export async function makeThumbnail(result, thumbW = 512) {
-  const full = await exportJPEG(result, 0.85);
-  const bmp = await createImageBitmap(full);
-  const c = document.createElement('canvas');
-  c.width = thumbW; c.height = thumbW / 2;
-  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-  bmp.close();
-  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
-}
-
 /* ---------------- misc ---------------- */
 
 export function estimateSizes(width, height) {

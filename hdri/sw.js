@@ -1,20 +1,20 @@
 /* TZHDRI service worker: precaches the app shell so capture sessions keep
    working offline once the tool has been opened at least once. */
 
-const CACHE = 'tzhdri-v3';
+const CACHE = 'tzhdri-v4';
 
 const SHELL = [
   './',
   'index.html',
   'manifest.webmanifest',
-  'css/hdri.css?v=2',
-  'js/app.js?v=2',
+  'css/hdri.css?v=3',
+  'js/app.js?v=3',
   'js/capture.js',
   'js/orientation.js',
   'js/stitch.js',
+  'js/refine.js',
   'js/viewer.js',
   'js/exporters.js',
-  'js/store.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   '../css/style.css?v=7',

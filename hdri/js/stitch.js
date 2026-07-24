@@ -20,8 +20,12 @@
 
 import * as THREE from 'three';
 import { frameFov } from './capture.js';
+import { refineOrientations } from './refine.js';
 
-const K1 = -0.07;          // gentle barrel undistortion typical of phone mains
+/* Phone ISPs already output lens-corrected frames, so the right residual
+   distortion is zero; a guessed barrel term injects position-dependent shifts
+   of a degree or more that poison both stitching and feature matching. */
+export const K1 = 0.0;
 const CROP = 0.92;         // discard frame edges beyond this ndc radius; FOV
                            // guess and distortion errors are worst out there
 const FEATHER = 0.18;      // feather width inside the crop, in ndc units
@@ -176,6 +180,20 @@ function exposureGains(shots) {
 export async function stitchEquirect(session, { width, onStage, onProgress }) {
   const height = width / 2;
   const { shots } = session;
+
+  // feature-match pass: correct each view's gyro orientation before
+  // projecting. Runs once per capture; re-stitches at other resolutions
+  // reuse the refined orientations.
+  if (!session.refined) {
+    onStage('align');
+    try {
+      session.refineStats = await refineOrientations(shots, p => onProgress(p * 0.22));
+    } catch (e) {
+      // alignment is an enhancement; a failure must never block stitching
+      session.refineStats = { error: String(e && e.message || e) };
+    }
+    session.refined = true;
+  }
   const canvas = document.createElement('canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: false });
   renderer.autoClear = false;
@@ -260,7 +278,7 @@ export async function stitchEquirect(session, { width, onStage, onProgress }) {
     projMat.uniforms.uExpand.value = session.simulated ? 1 : 0;
     renderer.setRenderTarget(accum);
     renderer.render(projScene, camera);
-    onProgress(0.05 + 0.7 * (i + 1) / shots.length);
+    onProgress(0.24 + 0.54 * (i + 1) / shots.length);
     if (i % 8 === 7) await new Promise(r => setTimeout(r, 0)); // let the UI breathe
   }
 
