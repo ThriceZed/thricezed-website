@@ -82,29 +82,25 @@ export class CaptureSession {
   /* ------------------------------------------------ lifecycle */
 
   async start() {
+    // iOS only shows the motion permission prompt while the tap gesture is
+    // still fresh, so this must be the FIRST await in the chain from the
+    // click. Asking after the camera prompt lets the activation expire and
+    // the request auto-denies, stranding the user in drag mode.
+    this._permission = 'unsupported';
+    if (OrientationService.isSupported()) {
+      this._permission = await this.orientation.requestPermission();
+      if (this._permission === 'granted') this.orientation.start();
+    }
     this._initThree();
-    if (this.demo) {
-      this.manualMode = !OrientationService.isSupported();
-      this._initDemoEnv();
-    } else {
-      await this._initCamera();
-    }
-    if (!this.demo) {
-      const perm = await this.orientation.requestPermission();
-      if (perm === 'granted') {
-        this.orientation.start();
-        // give the sensor a moment; fall back to manual aiming if silent
-        await new Promise(r => setTimeout(r, 600));
+    if (this.demo) this._initDemoEnv(); else await this._initCamera();
+    if (this._permission === 'granted' && !this.orientation.hasData) {
+      // sensors normally report within a frame or two; poll briefly
+      const t0 = performance.now();
+      while (!this.orientation.hasData && performance.now() - t0 < 1200) {
+        await new Promise(r => setTimeout(r, 100));
       }
-      this.manualMode = !this.orientation.hasData;
-    } else if (OrientationService.isSupported() && !this.manualMode) {
-      const perm = await this.orientation.requestPermission();
-      if (perm === 'granted') {
-        this.orientation.start();
-        await new Promise(r => setTimeout(r, 600));
-      }
-      this.manualMode = !this.orientation.hasData;
     }
+    this.manualMode = !this.orientation.hasData;
     this._initManualControls();
     this._buildTargets();
     this._initHud();
@@ -112,9 +108,11 @@ export class CaptureSession {
     this._prevT = performance.now();
     this._loop = this._loop.bind(this);
     this._raf = requestAnimationFrame(this._loop);
-    this.hud.hint.textContent = this.manualMode
-      ? 'Drag to aim. Hold on a circle to capture'
-      : 'Point at the glowing target';
+    this.hud.hint.textContent = !this.manualMode
+      ? 'Point at the glowing target'
+      : (this._permission === 'denied' && !this.demo)
+        ? 'Motion access denied. Reload and tap Allow, or drag to aim'
+        : 'Drag to aim. Hold on a circle to capture';
   }
 
   stop() {
