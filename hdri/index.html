@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>TZHDRI — ThriceZed HDRI Capture</title>
+<meta name="description" content="ThriceZed HDRI Capture. A private browser tool for capturing HDRI lighting environments with a smartphone.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="../assets/img/logo.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css?v=7">
+<link rel="stylesheet" href="css/hdri.css?v=1">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="../index.html" class="logo"><img src="../assets/img/logo.png" alt="ThriceZed"></a>
+  <nav class="site-nav">
+    <ul class="nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../about.html">About</a></li>
+      <li><a href="../services.html">Services</a></li>
+      <li><a href="../schedule.html">Schedule</a></li>
+      <li><a href="../software.html">Software</a></li>
+      <li><a href="../portfolio.html">Portfolio</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- ============================== HOME ============================== -->
+  <section class="view page-header" id="view-home">
+    <div class="hero-eyebrow" style="opacity:1;transform:none;">TZHDRI · Private Tool</div>
+    <h2>HDRI capture.<br>From your phone.</h2>
+    <p class="hdri-lead">Photograph a full lighting environment by aiming your phone at floating targets.
+    TZHDRI brackets exposures where your device allows it, stitches the sphere, and exports
+    HDR, EXR, TIFF, and JPEG maps ready for Blender, Unreal, Houdini, Maya, Cinema 4D, Resolve, and Unity.</p>
+
+    <div class="hdri-home-actions">
+      <button class="btn btn-solid" id="btn-start">Start Capture</button>
+      <button class="btn" id="btn-projects">Previous Projects</button>
+      <button class="btn" id="btn-tutorial">How It Works</button>
+    </div>
+
+    <div class="hdri-support" id="support-report" aria-live="polite"></div>
+
+    <p class="hdri-demo-line">No camera on this device?
+      <a href="#" id="btn-demo">Run a synthetic demo capture</a> to try the full pipeline.</p>
+  </section>
+
+  <!-- ============================ PROJECTS ============================ -->
+  <section class="view page-header" id="view-projects" hidden>
+    <div class="hero-eyebrow" style="opacity:1;transform:none;">TZHDRI</div>
+    <h2>Previous projects.</h2>
+    <div class="hdri-projects-grid" id="projects-grid"></div>
+    <p class="hdri-empty" id="projects-empty" hidden>No saved projects yet. Finished captures can be saved from the preview screen.</p>
+    <div class="hdri-home-actions">
+      <button class="btn" data-nav="home">Back</button>
+    </div>
+  </section>
+
+  <!-- ============================ CAPTURE ============================= -->
+  <div class="capture-stage" id="view-capture" hidden>
+    <video id="cap-video" autoplay muted playsinline></video>
+    <canvas id="cap-gl"></canvas>
+
+    <div class="cap-hud">
+      <div class="cap-topbar">
+        <button class="cap-exit" id="cap-exit" aria-label="Exit capture">&times;</button>
+        <div class="cap-progress">
+          <div class="cap-progress-num"><span id="cap-pct">0</span>%</div>
+          <div class="cap-progress-sub"><span id="cap-done">0</span> / <span id="cap-total">0</span> views</div>
+        </div>
+        <div class="cap-expo" id="cap-expo">EXPOSURE</div>
+      </div>
+
+      <div class="cap-compass"><div class="cap-compass-tape" id="compass-tape"></div><div class="cap-compass-tick"></div></div>
+
+      <div class="cap-reticle" id="cap-reticle">
+        <div class="cap-horizon" id="cap-horizon"></div>
+        <svg class="cap-ring" viewBox="0 0 100 100">
+          <circle class="cap-ring-bg" cx="50" cy="50" r="46"/>
+          <circle class="cap-ring-fill" id="cap-ring-fill" cx="50" cy="50" r="46"/>
+        </svg>
+      </div>
+
+      <div class="cap-hint" id="cap-hint">Point at the glowing target</div>
+
+      <div class="cap-bottombar">
+        <canvas class="cap-heatmap" id="cap-heatmap" width="96" height="48"></canvas>
+        <div class="cap-flash" id="cap-flash"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================== PROCESSING =========================== -->
+  <section class="view page-header" id="view-processing" hidden>
+    <div class="hero-eyebrow" style="opacity:1;transform:none;">TZHDRI</div>
+    <h2>Processing.</h2>
+    <div class="hdri-panel">
+      <ul class="proc-steps" id="proc-steps"></ul>
+      <div class="proc-bar"><div class="proc-bar-fill" id="proc-bar-fill"></div></div>
+      <p class="proc-note" id="proc-note">Everything runs on this device. Keep the page open.</p>
+    </div>
+  </section>
+
+  <!-- ============================ PREVIEW ============================= -->
+  <section class="view" id="view-preview" hidden>
+    <div class="preview-stage">
+      <canvas id="prev-gl"></canvas>
+      <div class="preview-badge" id="prev-badge">TRUE HDR</div>
+      <div class="preview-help">Drag to look around · Scroll or pinch to zoom</div>
+    </div>
+    <div class="preview-controls hdri-panel">
+      <div class="pv-row">
+        <label for="pv-exposure">Exposure <span class="pv-val" id="pv-exposure-val">+0.0 EV</span></label>
+        <input type="range" id="pv-exposure" min="-6" max="6" step="0.1" value="0">
+      </div>
+      <div class="pv-row pv-toggles">
+        <button class="btn pv-toggle" id="pv-clip">Clipping: Off</button>
+        <button class="btn pv-toggle" id="pv-compare">View: HDR</button>
+      </div>
+      <div class="pv-row pv-actions">
+        <button class="btn btn-solid" id="pv-export">Export</button>
+        <button class="btn" id="pv-save">Save Project</button>
+        <button class="btn" id="pv-retake">New Capture</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= EXPORT ============================= -->
+  <section class="view page-header" id="view-export" hidden>
+    <div class="hero-eyebrow" style="opacity:1;transform:none;">TZHDRI</div>
+    <h2>Export.</h2>
+    <div class="hdri-panel">
+      <div class="exp-row exp-res">
+        <label for="exp-res">Resolution</label>
+        <select id="exp-res">
+          <option value="2048">2K · 2048 × 1024</option>
+          <option value="4096" selected>4K · 4096 × 2048</option>
+          <option value="8192">8K · 8192 × 4096</option>
+        </select>
+        <span class="exp-res-note" id="exp-res-note"></span>
+      </div>
+      <ul class="exp-formats" id="exp-formats">
+        <li class="exp-row" data-fmt="hdr">
+          <div><strong>Radiance HDR</strong><span class="exp-desc">.hdr · RGBE · universal lighting format</span></div>
+          <span class="exp-size" data-size="hdr"></span>
+          <button class="btn btn-solid exp-dl" data-fmt="hdr">Download</button>
+        </li>
+        <li class="exp-row" data-fmt="exr">
+          <div><strong>OpenEXR</strong><span class="exp-desc">.exr · 16-bit float · VFX standard</span></div>
+          <span class="exp-size" data-size="exr"></span>
+          <button class="btn btn-solid exp-dl" data-fmt="exr">Download</button>
+        </li>
+        <li class="exp-row" data-fmt="tiff">
+          <div><strong>TIFF</strong><span class="exp-desc">.tif · 16-bit · display-referred</span></div>
+          <span class="exp-size" data-size="tiff"></span>
+          <button class="btn btn-solid exp-dl" data-fmt="tiff">Download</button>
+        </li>
+        <li class="exp-row" data-fmt="jpg">
+          <div><strong>JPEG Preview</strong><span class="exp-desc">.jpg · tone mapped preview</span></div>
+          <span class="exp-size" data-size="jpg"></span>
+          <button class="btn btn-solid exp-dl" data-fmt="jpg">Download</button>
+        </li>
+      </ul>
+      <p class="proc-note" id="exp-note"></p>
+      <div class="hdri-home-actions">
+        <button class="btn" data-nav="preview">Back to Preview</button>
+        <button class="btn" data-nav="home">Done</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ TUTORIAL ============================ -->
+<div class="tut-overlay" id="tutorial" hidden>
+  <div class="tut-card">
+    <div class="tut-step" data-step="0">
+      <h3>1 · Stand still</h3>
+      <p>Pick your spot and stay on it. Hold the phone close to your body and pivot in place. The whole sphere gets photographed from one point.</p>
+    </div>
+    <div class="tut-step" data-step="1" hidden>
+      <h3>2 · Aim at the circles</h3>
+      <p>Floating circles surround you. Line the reticle up with a circle and hold steady. The shot fires by itself when you are aligned. The glowing circle is the recommended next one.</p>
+    </div>
+    <div class="tut-step" data-step="2" hidden>
+      <h3>3 · Cover the sphere</h3>
+      <p>Work around the horizon first, then the upper and lower rings, then straight up and straight down. The map in the corner shows what you have covered.</p>
+    </div>
+    <div class="tut-step" data-step="3" hidden>
+      <h3>4 · Process and export</h3>
+      <p>When every circle is filled, TZHDRI merges exposures, stitches the panorama, and exports HDR, EXR, TIFF, and JPEG for your 3D package.</p>
+    </div>
+    <div class="tut-nav">
+      <button class="btn" id="tut-skip">Skip</button>
+      <div class="tut-dots" id="tut-dots"></div>
+      <button class="btn btn-solid" id="tut-next">Next</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <img src="../assets/img/logo.png" alt="ThriceZed">
+  <div class="social-links">
+    <a href="https://www.instagram.com/thricezed" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.youtube.com/@thricezed" target="_blank" rel="noopener">YouTube</a>
+  </div>
+  <p>&copy; 2026 ThriceZed. All rights reserved.</p>
+</footer>
+
+<script src="../js/main.js?v=2" defer></script>
+<script type="module" src="js/app.js?v=1"></script>
+</body>
+</html>
