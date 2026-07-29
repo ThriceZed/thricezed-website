@@ -5,7 +5,7 @@
 const RATES = {
   homeGame: 60,
   awayGame: 65,
-  extraTime: 8,   // per additional 30s block
+  extraTime: 15,   // per additional 30s block
   cgi: 10,        // per effects/CGI scene
   rush: 5,        // per day faster than standard turnaround
 };
