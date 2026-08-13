@@ -76,6 +76,19 @@
     margin-bottom: 0.8rem;
   }
 
+  .files-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .add-files {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.72rem;
+  }
+
   .file-list {
     list-style: none;
     margin: 1.6rem 0 0;
@@ -203,7 +216,13 @@
     <!-- Files (after sign in) -->
     <div class="staff-panel hidden" id="files-panel">
       <div class="staff-hello" id="staff-hello">Signed in</div>
-      <h3>Shared files</h3>
+
+      <div class="files-head">
+        <h3>Shared files</h3>
+        <a class="btn add-files"
+           href="https://github.com/ThriceZed/thricezed-website/upload/main/staff-files"
+           target="_blank" rel="noopener">Add files</a>
+      </div>
 
       <ul class="file-list" id="file-list">
         <li class="file-status">Loading files...</li>
