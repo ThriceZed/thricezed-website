@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff — ThriceZed</title>
+<meta name="description" content="ThriceZed staff file access.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=7">
+<style>
+  .staff-wrap {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .staff-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+  }
+
+  .staff-panel h3 { margin-bottom: 0.6rem; }
+
+  .staff-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1.8rem 0 1.2rem;
+  }
+
+  .staff-field label {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .staff-field input {
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.9rem 1rem;
+    width: 100%;
+    transition: border-color 0.2s ease;
+  }
+
+  .staff-field input:focus {
+    outline: none;
+    border-color: var(--text);
+  }
+
+  .staff-btn {
+    width: 100%;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  .staff-error {
+    color: #ff8080;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    min-height: 1.2em;
+  }
+
+  .staff-hello {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.8rem;
+  }
+
+  .file-list {
+    list-style: none;
+    margin: 1.6rem 0 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .file-list li {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0.2rem;
+    transition: color 0.2s ease;
+  }
+
+  .file-row:hover { color: var(--text); }
+
+  .file-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  .file-size {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .file-get {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .file-row:hover .file-get {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .file-status {
+    color: var(--text-faint);
+    font-size: 0.9rem;
+    padding: 1.2rem 0.2rem;
+  }
+
+  .signout {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 1.8rem;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .signout:hover { color: var(--text); border-color: var(--text); }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="logo"><img src="assets/img/logo.png" alt="ThriceZed"></a>
+  <nav class="site-nav">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="schedule.html">Schedule</a></li>
+      <li><a href="software.html">Software</a></li>
+      <li><a href="portfolio.html">Portfolio</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="hero-eyebrow" style="opacity:1;transform:none;">Staff</div>
+  <h2>File access.</h2>
+</section>
+
+<section class="container">
+  <div class="staff-wrap">
+
+    <!-- Login -->
+    <div class="staff-panel" id="login-panel">
+      <h3>Sign in</h3>
+      <p>Enter your staff password to get to the shared files.</p>
+
+      <form id="login-form">
+        <div class="staff-field">
+          <label for="pw">Password</label>
+          <input type="password" id="pw" autocomplete="current-password" autocapitalize="off" spellcheck="false">
+        </div>
+        <button type="submit" class="btn btn-solid staff-btn">Sign in</button>
+      </form>
+      <div class="staff-error" id="login-error"></div>
+    </div>
+
+    <!-- Files (after sign in) -->
+    <div class="staff-panel hidden" id="files-panel">
+      <div class="staff-hello" id="staff-hello">Signed in</div>
+      <h3>Shared files</h3>
+
+      <ul class="file-list" id="file-list">
+        <li class="file-status">Loading files...</li>
+      </ul>
+
+      <button class="signout" id="signout">Sign out</button>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <img src="assets/img/logo.png" alt="ThriceZed">
+  <div class="social-links">
+    <a href="https://www.instagram.com/thricezed" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.youtube.com/@thricezed" target="_blank" rel="noopener">YouTube</a>
+    <a href="staff.html">Staff</a>
+  </div>
+  <p>&copy; 2026 ThriceZed. All rights reserved.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/main.js?v=2"></script>
+<script src="js/staff.js?v=2"></script>
+</body>
+</html>
