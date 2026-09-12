@@ -67,7 +67,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
 <div class="wrap">
 
 <header>
-  <p class="docmeta">TTSP-UM-05 · Revision 0.5 · September 2026</p>
+  <p class="docmeta">TTSP-UM-06 · Revision 0.6 · September 2026</p>
   <h1>ThriceZed Tracking Studio Pro<br>User Manual</h1>
   <p class="subtitle">TTSP is a Blender extension that reconstructs a camera move from video. It produces a keyframed camera that matches the original shot, a colored point cloud of the filmed environment, and a dense mesh of the location for reflections, shadows and occlusion, for use in matchmoving and CG integration.</p>
   <nav class="toc" aria-label="Contents">
@@ -91,7 +91,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   <p>TTSP implements a structure-from-motion pipeline. Each solve passes through the same sequence:</p>
   <ol class="steps">
     <li><b>Frame extraction.</b> The video is sampled into still frames at a configurable interval and resolution.</li>
-    <li><b>Masking</b> (optional). Shapes you have drawn over moving objects are baked to per-frame images, and the regions inside them are excluded from analysis.</li>
+    <li><b>Masking</b> (optional). Regions covering moving objects, either from shapes you have drawn or from a matte video you supply, are excluded from analysis.</li>
     <li><b>Feature detection.</b> Each frame is scanned for thousands of distinctive, trackable points of detail.</li>
     <li><b>Feature matching.</b> The same points are identified across neighboring frames.</li>
     <li><b>Camera solving.</b> From those correspondences, the solver computes the one camera path and 3D point set that explain all observations.</li>
@@ -118,7 +118,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   <ol class="steps">
     <li>In the 3D viewport, press <kbd>N</kbd> and select the <b>TTSP</b> tab.</li>
     <li>In <b>Footage</b>, select a video file. Its properties and an estimated tracking time appear below the field.</li>
-    <li>If people or vehicles move through the shot, open <b>Masking</b> and draw shapes over them (§5). Skip this for static locations.</li>
+    <li>If people or vehicles move through the shot, open <b>Masking</b> and either draw shapes over them or load a matte video (§5). Skip this for static locations.</li>
     <li>In <b>Solve</b>, click <b>Track and solve</b>. Progress is reported per stage; Blender remains usable.</li>
     <li>When the solve is complete, click <b>Build geometry</b> in <b>Scene geometry</b> if you need a mesh of the location (§6). This is optional.</li>
     <li>Click <b>Build scene</b> in <b>Scene import</b>.</li>
@@ -140,15 +140,17 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   </table></div>
 
   <h3><span class="num">4.2</span>Masking</h3>
-  <p>Collapsed by default. Holds the tools for hiding moving objects from the tracker; the workflow is described in §5.</p>
+  <p>Collapsed by default. Holds the tools for hiding moving objects from the tracker; the workflow is described in §5. <b>Masks from</b> selects the source: <b>Shapes</b> to draw them here, or <b>Matte video</b> to supply your own.</p>
   <div class="tablewrap"><table>
-    <tr><th>Control</th><th>Description</th></tr>
-    <tr><td>Open mask editor</td><td>Opens the video in a new window, in Blender's Movie Clip Editor set to Mask mode, with a mask named <code>TTSP Mask &lt;clip&gt;</code> ready to draw on.</td></tr>
-    <tr><td>Add box shape</td><td>Adds a closed four-point polygon in the center of the frame. Drag its points over the moving object.</td></tr>
-    <tr><td>Clear masks (bin icon)</td><td>Removes every shape drawn for this video.</td></tr>
-    <tr><td>Ignore masked areas</td><td>On by default. When shapes exist, Track and solve bakes them and the solver ignores the regions inside. Turn off to solve without masks while keeping the shapes.</td></tr>
+    <tr><th>Control</th><th>Source</th><th>Description</th></tr>
+    <tr><td>Open mask editor</td><td>Shapes</td><td>Opens the video in a new window, in Blender's Movie Clip Editor set to Mask mode, with a mask named <code>TTSP Mask &lt;clip&gt;</code> ready to draw on.</td></tr>
+    <tr><td>Add box shape</td><td>Shapes</td><td>Adds a closed four-point polygon in the center of the frame. Drag its points over the moving object.</td></tr>
+    <tr><td>Clear masks (bin icon)</td><td>Shapes</td><td>Removes every shape drawn for this video.</td></tr>
+    <tr><td>Matte</td><td>Matte video</td><td>The black and white video to use. A readout below reports its resolution, frame rate and duration, and confirms that it lines up with the footage.</td></tr>
+    <tr><td>White is</td><td>Matte video</td><td><b>The moving objects</b> treats white as what to ignore, which is what a roto or Magic Mask matte usually looks like. <b>The area to track</b> is the reverse.</td></tr>
+    <tr><td>Ignore masked areas</td><td>Both</td><td>On by default. Turn off to solve without masks while keeping the shapes or matte for later.</td></tr>
   </table></div>
-  <p>A status line reports how many shapes are drawn. The Solve panel repeats this as <i>Masking N shapes</i> so it is visible at the moment you start a solve.</p>
+  <p>A status line reports how many shapes are drawn, or whether the matte lines up. The Solve panel repeats this as <i>Masking N shapes</i> or <i>Masking from your matte</i> so it is visible at the moment you start a solve.</p>
 
   <h3><span class="num">4.3</span>Solve</h3>
   <p>The <b>Engine</b> line reports which solver will run: the bundled solver (CPU) or a system COLMAP installation with GPU acceleration, if enabled in §4.7.</p>
@@ -161,7 +163,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   <div class="tablewrap"><table>
     <tr><th>Stage</th><th>Meaning</th></tr>
     <tr><td>Extracting Frames</td><td>Sampled stills are pulled from the video.</td></tr>
-    <tr><td>Preparing Masks</td><td>Baked masks are matched to the extracted frames (only when masking is active).</td></tr>
+    <tr><td>Preparing Masks</td><td>Baked shapes or your matte video are matched to the extracted frames (only when masking is active).</td></tr>
     <tr><td>Finding Features</td><td>Each frame is scanned for trackable detail. Reads <i>(masked)</i> when masks are in use.</td></tr>
     <tr><td>Matching Features</td><td>Detail is matched across neighboring frames.</td></tr>
     <tr><td>Solving Camera</td><td>Rotations, then positions, then refinement.</td></tr>
@@ -202,8 +204,9 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
 <section id="s5">
   <h2><span class="num">5</span>Masking moving objects</h2>
   <p>The solver assumes the world is still and only the camera moves. A person walking through the frame, a passing car, or an actor in the shot breaks that assumption: detail tracked on them is explained as camera motion, and the solve drifts or fails. Masks tell the solver which regions to disregard.</p>
+  <p>Masks come from one of two sources, selected by <b>Masks from</b> at the top of the panel. Draw shapes inside Blender (§5.1), or supply a matte video you made elsewhere (§5.2). Either way the solver receives the same thing: one black and white image per analyzed frame, where black is ignored.</p>
 
-  <h3><span class="num">5.1</span>Drawing</h3>
+  <h3><span class="num">5.1</span>Drawing shapes</h3>
   <ol class="steps">
     <li>With the video selected in Footage, expand <b>Masking</b> and click <b>Open mask editor</b>. The clip opens in a new window in Mask mode.</li>
     <li>Click <b>Add box shape</b>, or draw freehand: in the editor, <kbd>Ctrl</kbd>+click places points, and <b>Mask ▸ Toggle Cyclic</b> (<kbd>Alt</kbd>+<kbd>C</kbd>) closes the outline.</li>
@@ -213,9 +216,21 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
   </ol>
   <p>The mask window can be closed at any time; the shapes stay with the Blender file. Reopen it with the same button.</p>
 
-  <h3><span class="num">5.2</span>Solving with masks</h3>
-  <p>With <b>Ignore masked areas</b> on, <b>Track and solve</b> bakes the mask for every frame that will be analyzed before starting the background solve. Baking renders through the compositor at the clip's resolution and takes a few seconds for a typical clip; Blender is busy during this step and shows progress in the cursor. The baked masks are stored in <code>masks_baked/</code> inside the sidecar folder, and the resized, solver-ready versions in <code>masks/</code>.</p>
-  <p>Masked regions are excluded from feature detection only. The camera is still keyed on every frame, and the point cloud simply has no points where the object was. Geometry building (§6) reads the same masks, so a masked person never appears in the mesh.</p>
+  <h3><span class="num">5.2</span>Using your own matte video</h3>
+  <p>If you already roto in another application, or want a matte tighter than shapes can follow, set <b>Masks from</b> to <b>Matte video</b> and point the <b>Matte</b> field at the file. Anything that produces a black and white matte works: DaVinci Resolve's Magic Mask, After Effects roto brush, Nuke, or an AI segmentation export.</p>
+  <p>The matte has to describe the same shot, frame for frame:</p>
+  <ul>
+    <li><b>Same length.</b> It must run at least as long as the footage. TTSP samples it with the same frame step it uses on the footage, so matte frame <i>k</i> lands on analysis frame <i>k</i>. A matte that stops early is refused rather than silently misaligned.</li>
+    <li><b>Same aspect ratio.</b> Resolution may differ, since the matte is scaled to the analysis resolution, but a different shape is refused because it would stretch out of register.</li>
+    <li><b>Any grey is fine.</b> Values are rounded to pure black or white at the midpoint, so feathered or motion-blurred edges need no cleanup.</li>
+  </ul>
+  <p><b>White is</b> sets which side is the moving object. Roto mattes usually paint the subject white, which is the default (<b>The moving objects</b>); choose <b>The area to track</b> for a matte built the other way round. The readout under the field reports the matte's resolution, frame rate and duration, and says <i>Lines up with the footage</i> when it is usable.</p>
+  <p>Shapes and a matte are stored independently, so switching the source back and forth keeps both.</p>
+
+  <h3><span class="num">5.3</span>Solving with masks</h3>
+  <p>With <b>Ignore masked areas</b> on, <b>Track and solve</b> prepares the masks before starting the background solve. Shapes are baked for every frame that will be analyzed: baking renders through the compositor at the clip's resolution and takes a few seconds for a typical clip, during which Blender is busy and shows progress in the cursor. A matte video needs no bake and is read directly by the background process. Baked shapes are stored in <code>masks_baked/</code> inside the sidecar folder, and the solver-ready masks from either source in <code>masks/</code>.</p>
+  <p>Masked regions are excluded from feature detection only. The camera is still keyed on every frame, and the point cloud simply has no points where the object was. Geometry building (§6) reads the same masks, whichever source produced them, so a masked person never appears in the mesh.</p>
+  <p>The masked area is grown by a few pixels on the solver's side, so a matte that traces an object exactly still excludes the detail clinging to its edge.</p>
   <div class="note"><span class="label">When to mask</span>Mask anything that moves independently of the camera and covers a meaningful part of the frame. Small distant movement (a bird, a car three blocks away) is handled by the solver's own outlier rejection and does not need a mask. Reflections in glass or water can also mislead the solver; mask them if they dominate the frame.</div>
 </section>
 
@@ -265,6 +280,9 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
     <tr><td>Erratic camera path</td><td>Motion blur, insufficient frame overlap, or a moving object dominating the frame. Set "Analyze every _ frames" to 1, raise "Max frames analyzed", mask the moving object (§5), and try Robust quality.</td></tr>
     <tr><td>Solve drifts when a person passes</td><td>Mask them. Make the shape generous and keyframe it through the whole pass, including the frames where they are partly out of frame.</td></tr>
     <tr><td>"Mask bake failed"</td><td>The clip could not be rendered through the compositor. Confirm the video still plays in the mask editor window, then retry. The message includes the underlying cause.</td></tr>
+    <tr><td>"The matte covers N of the M analyzed frames"</td><td>The matte video is shorter than the footage. Re-export it over the full shot length.</td></tr>
+    <tr><td>"The matte is WxH, a different shape than the footage"</td><td>The matte's aspect ratio differs from the footage. Re-export at the footage's aspect ratio; the resolution itself does not have to match.</td></tr>
+    <tr><td>Solve ignores the wrong half of the frame</td><td>The matte's polarity is reversed. Flip <b>White is</b> in the Masking panel.</td></tr>
     <tr><td>Build geometry is greyed out</td><td>It needs a finished solve for the selected video. Run Track and solve first.</td></tr>
     <tr><td>"Could not fit depth to the solve on enough frames"</td><td>The solve has too few tracked points per frame for the fit. Solve again at a higher analysis resolution, or with "Analyze every _ frames" set to 1.</td></tr>
     <tr><td>Mesh has holes or floating fragments</td><td>Coverage gaps where frames disagreed or the camera never looked. Raise Frames used; small fragments are removed automatically on import, larger ones can be deleted in Edit Mode.</td></tr>
@@ -288,7 +306,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
 </section>
 
 <footer class="foot">
-  <span>ThriceZed Tracking Studio Pro · User Manual · Rev 0.5</span>
+  <span>ThriceZed Tracking Studio Pro · User Manual · Rev 0.6</span>
   <a href="https://thricezed.com">thricezed.com</a>
 </footer>
 
