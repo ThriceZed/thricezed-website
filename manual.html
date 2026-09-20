@@ -108,7 +108,7 @@ code { font-family: var(--mono); font-size: 13px; background: var(--panel); bord
     <li>No external software. The solver, frame extractor, depth network and its runtime are bundled inside the extension. The extension zip is about 180&nbsp;MB.</li>
     <li>Optional: a separate CUDA-enabled COLMAP installation can accelerate solving on NVIDIA GPUs (see §4.7).</li>
   </ul>
-  <p>To install: <b>Edit ▸ Preferences ▸ Get Extensions ▸ Install from Disk…</b>, select the <code>TTSP_v0.8.0.zip</code>, and confirm the extension is enabled in the Add-ons list. The panel appears in the 3D viewport sidebar (<kbd>N</kbd>) under the <b>TTSP</b> tab.</p>
+  <p>To install: <b>Edit ▸ Preferences ▸ Get Extensions ▸ Install from Disk…</b>, select the downloaded <code>ttsp-0.9.1.zip</code> (as-is, do not unzip it), and confirm the extension is enabled in the Add-ons list. The panel appears in the 3D viewport sidebar (<kbd>N</kbd>) under the <b>TTSP</b> tab.</p>
   <p>Each solved video receives a sidecar folder named <code>&lt;video&gt;_TTSP</code> next to the source file. It holds the extracted frames, baked masks, the solve database, the reconstruction, the geometry, and logs. Results are cached: re-importing a finished solve is immediate.</p>
   <div class="note"><span class="label">Updating from 0.7</span>Blender loads the new version on its next start. If TTSP is already open, save your work, restart Blender, then confirm the Masking and Scene geometry panels are present.</div>
 </section>
