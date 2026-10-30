@@ -86,21 +86,22 @@ function updateDisplay() {
   }
 }
 
-function buildRequestMailto() {
-  const lines = [
-    `Home Games: ${state.homeGames}`,
-    `Away Games: ${state.awayGames}`,
-    `Extra Video Length: ${state.extraTime}`,
-    `Effects/CGI Scenes: ${state.cgi}`,
-    `Rush Delivery: ${state.rush} Days`,
-    '',
-    'Description of Request:',
-    '',
-  ].join('\n');
+const CONTACT_PHONE = '+13163504148';
 
-  const subject = encodeURIComponent('Custom Package Request');
-  const body = encodeURIComponent(lines);
-  return `mailto:nick@thricezed.com?subject=${subject}&body=${body}`;
+function buildRequestSms() {
+  const parts = [
+    `${state.homeGames} home`,
+    `${state.awayGames} away`,
+  ];
+  if (state.extraTime) parts.push(`+${state.extraTime} x 30s length`);
+  if (state.cgi) parts.push(`${state.cgi} CGI scene${state.cgi === 1 ? '' : 's'}`);
+  if (state.rush) parts.push(`rush ${state.rush} day${state.rush === 1 ? '' : 's'}`);
+
+  const { total } = calculateTotal();
+  const body = `Hi ThriceZed, I'd like a custom package: ${parts.join(', ')}. `
+    + `Estimated total $${total.toFixed(0)}.`;
+
+  return `sms:${CONTACT_PHONE}?&body=${encodeURIComponent(body)}`;
 }
 
 function bindStepper(fieldName, { min = 0, max = 99 } = {}) {
@@ -133,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const { totalGames } = calculateTotal();
       if (totalGames < ELITE_MIN_GAMES) return;
-      window.location.href = buildRequestMailto();
+      window.location.href = buildRequestSms();
     });
   }
 
